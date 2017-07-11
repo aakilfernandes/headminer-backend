@@ -1,5 +1,4 @@
 node_modules
-secrets
-workspace
-migrations
+secrets/*
+workspace/*
 *.DS_Store
