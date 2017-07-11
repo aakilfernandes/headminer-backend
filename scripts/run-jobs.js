@@ -1,9 +1,10 @@
 const connection = require('../lib/connection')
 const child_process = require('child_process')
 
-startJobInterval('parse-twitter-statuses'), 1000)
-startJobInterval('scrape-url'), 1000)
-startJobInterval('get-twitter-friends'), 10000, 0)
+startJobInterval('parse-twitter-statuses', 1000)
+startJobInterval('scrape-url', 1000)
+startJobInterval('get-twitter-friends', 10000, 0)
+startJobInterval('take-facebook-snapshot', 1000)
 
 function startJobInterval(name, interval, _offset) {
   const offset = _offset || Math.floor(Math.random() * interval)
@@ -18,7 +19,6 @@ function getJobWrapper(name) {
     return connection.query('INSERT INTO jobs(name) VALUES (?)', [name]).then((result) => {
       const job_id = result.insertId
       const script_path = `${__dirname}/../scripts/${name}.js`
-      console.log(script_path)
       child_process.exec(`node ${script_path}`, (err) => {
         if (err) {
           console.log(err)
