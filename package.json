@@ -1,0 +1,29 @@
+{
+  "name": "headminer-backend",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "node ./migration.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "htmlparser2": "^3.9.2",
+    "lets-get-meta": "^2.1.1",
+    "lodash": "^4.17.4",
+    "mysql": "^2.13.0",
+    "mysql-migrations": "^1.0.3",
+    "oauth": "^0.9.15",
+    "open-graph": "^0.2.3",
+    "parse-domain": "^1.1.0",
+    "promise-mysql": "^3.0.1",
+    "promise-waterfall": "^0.1.0",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1",
+    "rss-parser": "^2.10.0",
+    "twitter": "^1.7.1",
+    "valid-url": "^1.0.9"
+  }
+}
