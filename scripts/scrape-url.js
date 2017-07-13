@@ -33,6 +33,7 @@ connection.query('SELECT * FROM publisher_hostnames').then((_hostname_pojos) => 
       return typeof url === 'string'
     }))
     const title = parsed.meta['og:title'] || parsed.title
+    const author = parsed.meta['article:author'] || parsed.meta.author
     const image = parsed.meta['og:image']
     const canonical_url = urls[0]
     const parsed_canonical_url = parseDomain(canonical_url)
@@ -44,8 +45,8 @@ connection.query('SELECT * FROM publisher_hostnames').then((_hostname_pojos) => 
     return connection.query(`INSERT IGNORE INTO urls(url) VALUES ${urlQGroups}`, urls).then(() => {
       if (canonical_url === url_pojo.url) {
         return connection.query('UPDATE urls SET canonical_url_id = ? WHERE id = ?', [url_pojo.id, url_pojo.id]).then(() => {
-          return connection.query('INSERT INTO articles(publisher_id, url_id, title, image) VALUES(?, ?, ?, ?)', [
-            hostname_pojo && hostname_pojo.publisher_id, url_pojo.id, title, image
+          return connection.query('INSERT INTO articles(publisher_id, url_id, title, author, image) VALUES(?, ?, ?, ?, ?)', [
+            hostname_pojo && hostname_pojo.publisher_id, url_pojo.id, title, author, image
           ])
         })
       }

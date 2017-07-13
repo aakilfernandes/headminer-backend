@@ -2,12 +2,12 @@ const connection = require('../lib/connection')
 const child_process = require('child_process')
 
 startJobInterval('parse-twitter-statuses', 1000)
-startJobInterval('scrape-url', 1000)
+startJobInterval('scrape-url', 5000)
 startJobInterval('get-twitter-friends', 10000, 0)
 startJobInterval('take-facebook-snapshot', 1000)
 
 function startJobInterval(name, interval, _offset) {
-  const offset = _offset || Math.floor(Math.random() * interval)
+  const offset = _offset === undefined ? Math.floor(Math.random() * interval) : 0
   setTimeout(() => {
     setInterval(getJobWrapper(name), interval)
   }, offset)

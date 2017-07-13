@@ -19,10 +19,12 @@ connection.query('SELECT * FROM publisher_hostnames').then((_hostnamePojos) => {
   hostnamePojos = _hostnamePojos
 }).then(() => {
   return connection.query(
-    `START TRANSACTION;
-    SELECT id FROM twitter_statuses WHERE parsed_at IS NULL ORDER BY id ASC LIMIT ?;
-    UPDATE twitter_statuses SET parsed_at = NOW() WHERE parsed_at IS NULL ORDER BY id ASC LIMIT ?;
-    COMMIT;`,
+    `
+      START TRANSACTION;
+      SELECT id FROM twitter_statuses WHERE parsed_at IS NULL ORDER BY id ASC LIMIT ?;
+      UPDATE twitter_statuses SET parsed_at = NOW() WHERE parsed_at IS NULL ORDER BY id ASC LIMIT ?;
+      COMMIT;
+    `,
     [count, count]
   )
 }).then((results) => {
