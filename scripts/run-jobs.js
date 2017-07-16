@@ -1,34 +1,11 @@
-const connection = require('../lib/connection')
-const child_process = require('child_process')
+const JobQueue = require('../lib/JobQueue')
+const get_reddit_posts_job = require('../jobs/getRedditPosts')
 
-startJobInterval('parse-twitter-statuses', 1000)
-startJobInterval('scrape-url', 5000)
-startJobInterval('get-twitter-friends', 10000, 0)
-startJobInterval('take-facebook-snapshot', 1000)
+const job_queue = new JobQueue()
 
-function startJobInterval(name, interval, _offset) {
-  const offset = _offset === undefined ? Math.floor(Math.random() * interval) : 0
-  setTimeout(() => {
-    setInterval(getJobWrapper(name), interval)
-  }, offset)
-}
+job_queue.addJob(get_reddit_posts_job)
+setInterval(() => {
+  job_queue.addJob(get_reddit_posts_job)
+}, 10000)
 
-function getJobWrapper(name) {
-  return function jobWrapper() {
-    console.log(`--- START JOB: ${name} ---`)
-    return connection.query('INSERT INTO jobs(name) VALUES (?)', [name]).then((result) => {
-      const job_id = result.insertId
-      const script_path = `${__dirname}/../scripts/${name}.js`
-      child_process.exec(`node ${script_path}`, (err) => {
-        if (err) {
-          console.log(err)
-          connection.query(`UPDATE jobs SET failed_at = NOW() WHERE id = ?`, [job_id])
-        } else {
-          connection.query(`UPDATE jobs SET succeeded_at = NOW() WHERE id = ?`, [job_id])
-        }
-      })
-    }).then(() => {
-      console.log(`--- END JOB: ${name} ---`)
-    })
-  }
-}
+job_queue.runJobs()
