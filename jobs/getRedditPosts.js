@@ -10,7 +10,6 @@ module.exports = new Job('get-reddit-posts', () => {
     const before = posts.length > 0 ? posts[0].id : 0
     return getRedditPosts(before)
   }).then((_posts) => {
-    throw new Error('rand: ' + Math.random())
     const posts = _posts.filter((post) => {
       return !post.is_self
     })
