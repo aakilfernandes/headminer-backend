@@ -10,6 +10,7 @@ module.exports = new Job('get-reddit-posts', () => {
     const before = posts.length > 0 ? posts[0].id : 0
     return getRedditPosts(before)
   }).then((_posts) => {
+    throw new Error('rand: ' + Math.random())
     const posts = _posts.filter((post) => {
       return !post.is_self
     })
@@ -48,7 +49,7 @@ module.exports = new Job('get-reddit-posts', () => {
     return connection.query(`
       INSERT IGNORE INTO domains(domain) VALUES ${insert_domains_q_groups};
       INSERT IGNORE INTO urls(url, domain_id) VALUES ${insert_urls_q_groups};
-      INSERT IGNORE INTO reddit_posts(id, created_at, subreddit_id, url_id) VALUES ${insert_posts_q_groups};
+      INSERT IGNORE INTO reddit_posts(id, created_at, subreddit, url_id) VALUES ${insert_posts_q_groups};
       `,
       all_insert_values
     )
