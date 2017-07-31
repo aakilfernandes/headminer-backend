@@ -14,7 +14,6 @@
     "delay": "^2.0.0",
     "event-emitter": "^0.3.5",
     "htmlparser2": "^3.9.2",
-    "jobbit": "0.0.2",
     "lets-get-meta": "^2.1.1",
     "lodash": "^4.17.4",
     "mysql": "^2.13.0",
@@ -30,7 +29,6 @@
     "request-promise": "^4.2.1",
     "rss-parser": "^2.10.0",
     "twitter": "^1.7.1",
-    "usage": "^0.7.1",
     "valid-url": "^1.0.9"
   }
 }

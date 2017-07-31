@@ -1,7 +1,6 @@
 const Jobbit = require('jobbit')
 const _ = require('lodash')
 const connection = require('../lib/connection')
-const delay = require('delay')
 
 console.log('run-jobs')
 
