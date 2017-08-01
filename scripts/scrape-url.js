@@ -11,7 +11,7 @@ return connection.query(`
   START TRANSACTION;
   SET @url_id := (
     SELECT urls.id FROM domains, urls
-    WHERE urls.scraped_at IS NULL AND domains.id = urls.domain_id AND domains.is_political = TRUE
+    WHERE urls.scraped_at IS NULL AND domains.id = urls.domain_id AND domains.is_ignored = FALSE
     LIMIT 1
   );
   SELECT * FROM urls WHERE id = @url_id;
