@@ -44,12 +44,14 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
     insert_urls_values.concat(insert_posts_values)
   )
   return connection.query(`
-    INSERT IGNORE INTO domains(domain) VALUES ${insert_domains_q_groups};
-    INSERT IGNORE INTO urls(url, domain_id) VALUES ${insert_urls_q_groups};
+    INSERT IGNORE INTO domains(domain) VALUES ${insert_domains_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
+    INSERT IGNORE INTO urls(url, domain_id) VALUES ${insert_urls_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
     INSERT IGNORE INTO reddit_posts(id, created_at, subreddit, url_id) VALUES ${insert_posts_q_groups};
     `,
     all_insert_values
   )
+}).then(() => {
+
 }).finally(() => {
   connection.end()
 })

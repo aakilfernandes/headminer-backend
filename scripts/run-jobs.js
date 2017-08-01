@@ -23,6 +23,7 @@ function runJobbitThread() {
 function getNextJobbit() {
 
   const script_name = getNextScriptName()
+  console.log(script_name)
   return connection.query('INSERT INTO jobs(created_at, name) VALUES(?, ?)', [
     new Date(), script_name
   ]).then((results) => {
