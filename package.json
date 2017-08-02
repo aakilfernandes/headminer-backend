@@ -22,7 +22,6 @@
     "oauth": "^0.9.15",
     "open-graph": "^0.2.3",
     "opener": "^1.4.3",
-    "parse-domain": "^1.1.0",
     "promise-mysql": "^3.0.1",
     "promise-waterfall": "^0.1.0",
     "prompt": "^1.0.0",

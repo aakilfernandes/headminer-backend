@@ -3,7 +3,7 @@ const request = require('request-promise')
 const parseHtml = require('../lib/parseHtml')
 const _ = require('lodash')
 const getQGroups = require('../lib/getQGroups')
-const parseDomain = require('parse-domain')
+const urljs = require('url')
 
 let hostname_pojos
 
@@ -23,6 +23,7 @@ return connection.query(`
   if (!url_pojo) {
     return
   }
+  console.log(url_pojo.id)
   return request(url_pojo.url, {
     resolveWithFullResponse: true,
     timeout: 5000
@@ -44,27 +45,24 @@ return connection.query(`
     const description = parsed.meta['og:description'] || parsed.description
     const image = parsed.meta['og:image']
     const canonical_url = urls[0]
-    const parsed_canonical_url = parseDomain(canonical_url)
-    if (!parsed_canonical_url) {
-      throw new Error(`Could not parse canonical url ${canonical_url}`)
-    }
+    const canonical_url_domain = urljs.parse(canonical_url).hostname
 
-    return connection.query(
-      `INSERT IGNORE INTO urls(url) VALUE (?)`, [canonical_url]
-    ).then(() => {
-      return connection.query(
-        `UPDATE urls SET canonical_url_id = (SELECT id WHERE url = ?) WHERE id = ?`,
-        [canonical_url, url_pojo.id]
-      )
-    }).then(() => {
-      return connection.query('INSERT INTO articles(url_id, title, author, description, image) VALUES(?, ?, ?, ?, ?)', [
-        url_pojo.id,
-        title,
-        author,
-        description,
-        image
-      ])
-    })
+    console.log(canonical_url)
+    console.log(canonical_url_domain)
+
+    return connection.query(`
+      INSERT IGNORE INTO domains(domain) VALUE (?);
+      INSERT IGNORE INTO urls(domain_id, url) VALUE ((SELECT id FROM domains WHERE domains.domain = ?), ?);
+      SET @canonical_url_id := (SELECT id FROM urls WHERE url = ? LIMIT 1);
+      UPDATE urls SET canonical_url_id = @canonical_url_id WHERE id = ?;
+      INSERT INTO articles(url_id, title, author, description, image) VALUES(?, ?, ?, ?, ?);
+    `, [
+      canonical_url_domain,
+      canonical_url_domain,
+      canonical_url,
+      canonical_url, url_pojo.id,
+      url_pojo.id, title, author, description, image
+    ])
   })
 }).finally(() => {
   connection.end()

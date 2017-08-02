@@ -32,25 +32,29 @@ function getNextJobbit() {
     const jobbit = new Jobbit(command)
 
     return jobbit.promise.then((completion) => {
-      return connection.query('UPDATE jobs SET finished_at = ?, is_failed = ?, error = ? WHERE id = ?', [
+      return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
         new Date(),
+        completion.stdout || null,
         (completion.error || completion.stderr) ? true : false,
         completion.stderr || completion.error || null,
         job_id
       ])
     }, (error) => {
-      return connection.query('UPDATE jobs SET finished_at = ?, is_failed = ?, error = ? WHERE id = ?', [
+      return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
         new Date(),
+        completion.stdout || null,
         true,
         error,
         job_id
       ])
     })
+  }).catch((error) => {
+    console.error(error)
   })
 }
 
 function getNextScriptName() {
-  if (add_reddit_posts_started_at === null || Date.now() - add_reddit_posts_started_at > 10000) {
+  if (add_reddit_posts_started_at === null || Date.now() - add_reddit_posts_started_at > 30000) {
     add_reddit_posts_started_at = Date.now()
     return 'add-reddit-posts'
   }
