@@ -23,34 +23,48 @@ connection.query(`
 
   const url_pojo = url_pojos[0]
   console.log(url_pojo.id)
-  
+
   return getTwitterStatuses(`url:${url_pojo.url}`).then((statuses) => {
     console.log(statuses.length)
     if (statuses.length === 0) {
       return
     }
+
     const insert_users_q_groups = getQGroups(statuses.length, 1)
-    const insert_statuses_q_groups = getQGroups(statuses.length, 4)
+    const insert_statuses_q_groups = getQGroups(statuses.length, 3)
+    const insert_statuses_urls_q_groups = getQGroups(statuses.length, 2)
+
     const insert_users_values = []
     const insert_statuses_values = []
+    const insert_statuses_urls_values = []
 
     statuses.forEach((status) => {
       insert_users_values.push(status.user.id_str)
       insert_statuses_values.push(
         status.id_str,
         new Date(status.created_at),
-        status.user.id_str,
+        status.user.id_str
+      )
+      insert_statuses_urls_values.push(
+        status.id_str,
         url_pojo.id
       )
     })
 
+    const all_values = []
+      .concat(insert_users_values)
+      .concat(insert_statuses_values)
+      .concat(insert_statuses_urls_values)
+
     return connection.query(`
       INSERT IGNORE INTO twitter_users(id)
       VALUES ${insert_users_q_groups};
-      INSERT IGNORE INTO twitter_statuses(id, created_at, user_id, url_id)
+      INSERT IGNORE INTO twitter_statuses(id, created_at, user_id)
       VALUES ${insert_statuses_q_groups};
+      INSERT INTO twitter_statuses_urls(status_id, url_id)
+      VALUES ${insert_statuses_urls_q_groups};
       `,
-      insert_users_values.concat(insert_statuses_values)
+      all_values
     )
   })
 }).finally(() => {

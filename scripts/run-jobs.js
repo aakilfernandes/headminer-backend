@@ -58,7 +58,7 @@ function getNextScriptName() {
     add_reddit_posts_started_at = Date.now()
     return 'add-reddit-posts'
   }
-  if (Math.random() > .5) {
+  if (Math.random() > .3) {
     return 'add-twitter-statuses'
   }
   return 'scrape-url'
