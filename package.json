@@ -20,6 +20,7 @@
     "lodash": "^4.17.4",
     "mysql": "^2.13.0",
     "mysql-migrations": "^1.0.3",
+    "node-mysql-deadlock-retries": "^2.1.0",
     "oauth": "^0.9.15",
     "open-graph": "^0.2.3",
     "opener": "^1.4.3",
