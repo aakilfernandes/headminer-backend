@@ -57,9 +57,9 @@ function getNextScriptName() {
     add_reddit_posts_started_at = Date.now()
     return 'add-reddit-posts'
   }
-  const twitter_search_rate_limited_at = fs.readFileSync(twitter_search_rate_limited_at_file, 'utf8')
 
-  if (getTimeSinceTwitterSearchRateLimitedAt() < 60000) {
+  const time_since_twitter_search_rate_limited_at = getTimeSinceTwitterSearchRateLimitedAt()
+  if (time_since_twitter_search_rate_limited_at !== null && time_since_twitter_search_rate_limited_at < 60000) {
     return 'scrape-url'
   }
 
