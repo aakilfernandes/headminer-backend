@@ -1,10 +1,9 @@
 const Jobbit = require('jobbit')
 const _ = require('lodash')
 const connection = require('../lib/connection')
+const fs = require('fs')
 
-console.log('run-jobs')
-
-const script_dir = `node ${__dirname}/../scripts`
+const twitter_search_rate_limited_at_file = `${__dirname}/../workspace/twitter-search-rate-limited-at`
 
 let add_reddit_posts_started_at = null
 
@@ -58,8 +57,24 @@ function getNextScriptName() {
     add_reddit_posts_started_at = Date.now()
     return 'add-reddit-posts'
   }
+  const twitter_search_rate_limited_at = fs.readFileSync(twitter_search_rate_limited_at_file, 'utf8')
+
+  if (getTimeSinceTwitterSearchRateLimitedAt() < 60000) {
+    return 'scrape-url'
+  }
+
   if (Math.random() > .3) {
     return 'add-twitter-statuses'
   }
+
   return 'scrape-url'
+
+}
+
+function getTimeSinceTwitterSearchRateLimitedAt () {
+  if (!fs.existsSync(twitter_search_rate_limited_at_file)) {
+    return null
+  }
+  const twitter_search_rate_limited_at = fs.readFileSync(twitter_search_rate_limited_at_file, 'utf8')
+  return new Date() - new Date(twitter_search_rate_limited_at)
 }

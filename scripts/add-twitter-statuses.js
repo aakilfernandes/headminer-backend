@@ -1,6 +1,9 @@
 const getTwitterStatuses = require('../lib/getTwitterStatuses')
 const connection = require('../lib/connection')
 const getQGroups = require('../lib/getQGroups')
+const fs = require('fs')
+
+const twitter_search_rate_limited_at_file = `${__dirname}/../workspace/twitter-search-rate-limited-at`
 
 connection.query(`
   START TRANSACTION;
@@ -67,6 +70,11 @@ connection.query(`
       all_values
     )
   })
+}).catch((error) => {
+  if (error[0] && error[0].code === 88) {
+    fs.writeFileSync(twitter_search_rate_limited_at_file, new Date())
+  }
+  throw error
 }).finally(() => {
   connection.end()
 })
