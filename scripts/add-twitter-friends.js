@@ -5,6 +5,7 @@ const waterfall = require('promise-waterfall')
 const fs = require('fs')
 const _ = require('lodash')
 const getQGroups = require('../lib/getQGroups')
+const updateTwitterFriendIdsLimitedAt = require('../lib/updateTwitterFriendIdsLimitedAt')
 
 const max_friend_count = 2000
 
@@ -40,6 +41,11 @@ return connection.query(`
     )
 
   })
+}).catch((error) => {
+  if (error[0] && error[0].code === 88) {
+    updateTwitterFriendIdsLimitedAt()
+  }
+  throw error
 }).finally(() => {
   connection.end()
 })

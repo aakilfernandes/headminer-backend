@@ -2,8 +2,8 @@ const Jobbit = require('jobbit')
 const _ = require('lodash')
 const connection = require('../lib/connection')
 const fs = require('fs')
-
-const twitter_search_rate_limited_at_file = `${__dirname}/../workspace/twitter-search-rate-limited-at`
+const getTimeSinceTwitterSearchLimitedAt = require('../lib/getTimeSinceTwitterSearchLimitedAt')
+const getTimeSinceTwitterFriendIdsLimitedAt = require('../lib/getTimeSinceTwitterFriendIdsLimitedAt')
 
 let add_reddit_posts_started_at = null
 
@@ -58,29 +58,22 @@ function getNextScriptName() {
     return 'add-reddit-posts'
   }
 
-  const time_since_twitter_search_rate_limited_at = getTimeSinceTwitterSearchRateLimitedAt()
-  if (time_since_twitter_search_rate_limited_at !== null && time_since_twitter_search_rate_limited_at < 60000) {
-    return 'scrape-url'
-  }
-
   const random = Math.random()
 
   if (random < .5) {
-    return 'add-twitter-statuses'
+    const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
+    if (time_since_limited_at === null || time_since_limited_at > 60000) {
+      return 'add-twitter-statuses'
+    }
   }
 
   if (random < .75) {
-    return 'add-twitter-friends'
+    const time_since_limited_at = getTimeSinceTwitterFriendIdsLimitedAt()
+    if (time_since_limited_at === null || time_since_limited_at > 60000) {
+      return 'add-twitter-friends'
+    }
   }
 
   return 'scrape-url'
 
-}
-
-function getTimeSinceTwitterSearchRateLimitedAt () {
-  if (!fs.existsSync(twitter_search_rate_limited_at_file)) {
-    return null
-  }
-  const twitter_search_rate_limited_at = fs.readFileSync(twitter_search_rate_limited_at_file, 'utf8')
-  return new Date() - new Date(twitter_search_rate_limited_at)
 }
