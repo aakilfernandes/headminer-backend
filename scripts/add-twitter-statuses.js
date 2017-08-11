@@ -16,10 +16,13 @@ connection.query(`
   );
   UPDATE urls SET twitter_statuses_added_at = NOW() WHERE id = @url_id;
   SELECT * FROM urls WHERE id = @url_id;
+  SELECT * FROM twitter_statuses_urls WHERE url_id = @url_id ORDER BY status_id DESC LIMIT 1;
   COMMIT;
   `
 ).then((results) => {
+
   const url_pojos = results[3]
+  const status_urls_pojos = results[4]
   if (url_pojos.length === 0) {
     return
   }
@@ -27,7 +30,10 @@ connection.query(`
   const url_pojo = url_pojos[0]
   console.log(url_pojo.id)
 
-  return getTwitterStatuses(`url:${url_pojo.url}`).then((statuses) => {
+  const since_id = status_urls_pojos.length > 0 ? status_urls_pojos[0].status_id : 0
+  console.log(since_id)
+
+  return getTwitterStatuses(`url:${url_pojo.url}`, since_id).then((statuses) => {
     console.log(statuses.length)
 
     const insert_users_q_groups = getQGroups(statuses.length, 3)
@@ -65,14 +71,19 @@ connection.query(`
       .concat(insert_statuses_values)
       .concat(insert_statuses_urls_values)
 
-    return connection.query(`
-      UPDATE urls SET twitter_statuses_count = ? WHERE id = ?;
+    const inserts_query = statuses.length === 0 ? '' :
+      `
       INSERT IGNORE INTO twitter_users(id, friends_count, followers_count)
       VALUES ${insert_users_q_groups};
       INSERT IGNORE INTO twitter_statuses(id, created_at, user_id)
       VALUES ${insert_statuses_q_groups};
       INSERT INTO twitter_statuses_urls(status_id, url_id)
       VALUES ${insert_statuses_urls_q_groups};
+      `
+
+    return connection.query(`
+      UPDATE urls SET twitter_statuses_count = ? WHERE id = ?;
+      ${inserts_query}
       `,
       all_values
     )
