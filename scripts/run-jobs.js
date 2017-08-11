@@ -63,9 +63,9 @@ function getNextScriptName() {
     return 'scrape-url'
   }
 
-  // if (Math.random() > .3) {
-  //   return 'add-twitter-statuses'
-  // }
+  if (Math.random() > .3) {
+    return 'add-twitter-statuses'
+  }
 
   return 'scrape-url'
 

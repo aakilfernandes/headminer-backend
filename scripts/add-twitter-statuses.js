@@ -29,11 +29,8 @@ connection.query(`
 
   return getTwitterStatuses(`url:${url_pojo.url}`).then((statuses) => {
     console.log(statuses.length)
-    if (statuses.length === 0) {
-      return
-    }
 
-    const insert_users_q_groups = getQGroups(statuses.length, 1)
+    const insert_users_q_groups = getQGroups(statuses.length, 3)
     const insert_statuses_q_groups = getQGroups(statuses.length, 3)
     const insert_statuses_urls_q_groups = getQGroups(statuses.length, 2)
 
@@ -42,7 +39,11 @@ connection.query(`
     const insert_statuses_urls_values = []
 
     statuses.forEach((status) => {
-      insert_users_values.push(status.user.id_str)
+      insert_users_values.push(
+        status.user.id_str,
+        status.user.friends_count,
+        status.user.followers_count
+      )
       insert_statuses_values.push(
         status.id_str,
         new Date(status.created_at),
@@ -54,13 +55,19 @@ connection.query(`
       )
     })
 
-    const all_values = []
+    const old_twitter_statuses_count = url_pojo.twitter_statuses_count || 0
+    const new_twitter_statuses_count = old_twitter_statuses_count + statuses.length
+
+    console.log(new_twitter_statuses_count)
+
+    const all_values = [new_twitter_statuses_count, url_pojo.id]
       .concat(insert_users_values)
       .concat(insert_statuses_values)
       .concat(insert_statuses_urls_values)
 
     return connection.query(`
-      INSERT IGNORE INTO twitter_users(id)
+      UPDATE urls SET twitter_statuses_count = ? WHERE id = ?;
+      INSERT IGNORE INTO twitter_users(id, friends_count, followers_count)
       VALUES ${insert_users_q_groups};
       INSERT IGNORE INTO twitter_statuses(id, created_at, user_id)
       VALUES ${insert_statuses_q_groups};
