@@ -24,16 +24,16 @@ return connection.query(`
     stringify_ids: true
   }).then((result) => {
     const friend_ids = result.ids
-    const insert_relationship_qs = getQGroups(friend_ids.length, 2)
-    const insert_relationship_values = []
+    const insert_friendships_qs = getQGroups(friend_ids.length, 2)
+    const insert_friendships_values = []
 
     friend_ids.forEach((friend_id) => {
-      return insert_relationship_values.push(user.id, friend_id)
+      return insert_friendships_values.push(user.id, friend_id)
     })
 
     return connection.query(
-      `INSERT IGNORE INTO twitter_friendships(user_id, friend_id) VALUES ${insert_relationship_qs}`,
-      insert_relationship_values
+      `INSERT IGNORE INTO twitter_friendships(user_id, friend_id) VALUES ${insert_friendships_qs}`,
+      insert_friendships_values
     )
 
   })
