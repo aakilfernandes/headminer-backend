@@ -63,8 +63,14 @@ function getNextScriptName() {
     return 'scrape-url'
   }
 
-  if (Math.random() > .3) {
+  const random = Math.random()
+
+  if (random < .5) {
     return 'add-twitter-statuses'
+  }
+
+  if (random < .75) {
+    return 'add-twitter-friends'
   }
 
   return 'scrape-url'

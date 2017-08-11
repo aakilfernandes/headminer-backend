@@ -18,6 +18,7 @@ return connection.query(`
   max_friend_count
 ]).then((result) => {
   const user = result[2][0]
+  console.log(user.id)
   return twitter.get('friends/ids', {
     count: max_friend_count,
     user_id: user.id,
@@ -26,6 +27,8 @@ return connection.query(`
     const friend_ids = result.ids
     const insert_friendships_qs = getQGroups(friend_ids.length, 2)
     const insert_friendships_values = []
+
+    console.log(friend_ids.length)
 
     friend_ids.forEach((friend_id) => {
       return insert_friendships_values.push(user.id, friend_id)
