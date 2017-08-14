@@ -68,14 +68,14 @@ function getNextScriptName() {
 
   if (random < .5) {
     const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
-    if (time_since_limited_at === null || time_since_limited_at > 60000) {
+    if (time_since_limited_at === null || time_since_limited_at > 150000) {
       return 'add-twitter-statuses'
     }
   }
 
   if (random < .75) {
     const time_since_limited_at = getTimeSinceTwitterFriendIdsLimitedAt()
-    if (time_since_limited_at === null || time_since_limited_at > 60000) {
+    if (time_since_limited_at === null || time_since_limited_at > 150000) {
       return 'add-twitter-friends'
     }
   }
