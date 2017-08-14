@@ -12,7 +12,9 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
     return !post.is_self
   })
 
-  if (_posts.length === 0) {
+  console.log(posts.length)
+
+  if (posts.length === 0) {
     return
   }
 
