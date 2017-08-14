@@ -6,6 +6,7 @@ const getTimeSinceTwitterSearchLimitedAt = require('../lib/getTimeSinceTwitterSe
 const getTimeSinceTwitterFriendIdsLimitedAt = require('../lib/getTimeSinceTwitterFriendIdsLimitedAt')
 
 let add_reddit_posts_started_at = null
+let add_twitter_influencers_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -56,6 +57,11 @@ function getNextScriptName() {
   if (add_reddit_posts_started_at === null || Date.now() - add_reddit_posts_started_at > 30000) {
     add_reddit_posts_started_at = Date.now()
     return 'add-reddit-posts'
+  }
+
+  if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 600000) {
+    add_twitter_influencers_started_at = Date.now()
+    return 'add-twitter-influencers'
   }
 
   const random = Math.random()

@@ -13,6 +13,7 @@
     "bignumber.js": "^4.0.2",
     "colors": "^1.1.2",
     "delay": "^2.0.0",
+    "emoji-strip": "^1.0.1",
     "event-emitter": "^0.3.5",
     "htmlparser2": "^3.9.2",
     "jobbit": "0.0.2",
