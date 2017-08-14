@@ -8,11 +8,12 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
   const before = posts.length > 0 ? posts[0].id : 0
   return getRedditPosts(before)
 }).then((_posts) => {
+
+  console.log(_posts.length)
+
   const posts = _posts.filter((post) => {
     return !post.is_self
   })
-
-  console.log(posts.length)
 
   if (posts.length === 0) {
     return
