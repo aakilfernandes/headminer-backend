@@ -4,16 +4,22 @@ const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
 
 
-connection.query((`SELECT * FROM twitter_influencers`)).then((influencers) => {
+connection.query((`SELECT * FROM twitter_influencers ORDER BY id`)).then((influencers) => {
   return connection.query(`
-    SELECT twitter_statuses_urls.url_id, COUNT(twitter_statuses_urls.id)
-    AS url_count FROM urls, twitter_statuses_urls
-    WHERE urls.id = twitter_statuses_urls.url_id
-    GROUP BY url_id HAVING url_count >= 100
-    ORDER BY COUNT(twitter_statuses_urls.id)
-    DESC, urls.twitter_influencified_at ASC LIMIT 1
+    START TRANSACTION;
+    SELECT @url_id := twitter_statuses_urls.url_id, twitter_statuses_urls.url_id, COUNT(twitter_statuses_urls.id)
+      AS url_count FROM urls, twitter_statuses_urls
+      WHERE urls.id = twitter_statuses_urls.url_id
+      GROUP BY url_id HAVING url_count >= 100
+      ORDER BY urls.twitter_influencified_at ASC, url_count DESC
+      LIMIT 1;
+    UPDATE urls SET twitter_influencified_at = NOW() WHERE id = @url_id;
+    COMMIT;
   `).then((results) => {
-    const url_id = results[0].url_id
+    const url_id = results[1][0].url_id
+
+    console.log(url_id)
+
     return connection.query(`
       SELECT * FROM twitter_statuses_urls WHERE url_id = ?
     `, [url_id]).then((statuses_urls) => {
@@ -36,10 +42,8 @@ connection.query((`SELECT * FROM twitter_influencers`)).then((influencers) => {
           SELECT * FROM twitter_users WHERE id IN (${select_user_ids_qs})
         `, user_ids).then((users) => {
           const inserts = []
-          console.log('influencers.length', influencers.length)
           influencers.forEach((influencer, index) => {
             inserts.push(function insert() {
-              console.log('index', index)
               return connection.query(`
                 START TRANSACTION;
                 SET @users_count := (
@@ -60,9 +64,7 @@ connection.query((`SELECT * FROM twitter_influencers`)).then((influencers) => {
                 url_id,
                 influencer.id,
               ])
-            ).then((results) => {
-              console.log(results)
-            })
+            )
           })
         })
         return waterfall(inserts)
