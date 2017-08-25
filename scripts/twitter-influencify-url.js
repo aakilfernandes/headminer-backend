@@ -4,7 +4,12 @@ const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
 
 
-connection.query((`SELECT * FROM twitter_influencers ORDER BY id`)).then((influencers) => {
+connection.query(
+  `SELECT * FROM twitter_influencers WHERE is_ignored = 0 ORDER BY id`
+).then((influencers) => {
+  if (influencers.length === 0) {
+    return
+  }
   return connection.query(`
     START TRANSACTION;
     SELECT @url_id := twitter_statuses_urls.url_id, twitter_statuses_urls.url_id, COUNT(twitter_statuses_urls.id)
