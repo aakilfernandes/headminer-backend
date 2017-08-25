@@ -72,19 +72,24 @@ function getNextScriptName() {
 
   const random = Math.random()
 
-  if (random < .5) {
+  if (random < .2) {
+    return 'coallesce-article'
+  }
+
+  if (random < .6) {
     const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
     if (time_since_limited_at === null || time_since_limited_at > 900000) {
       return 'add-twitter-statuses'
     }
   }
 
-  if (random < .75) {
+  if (random < .8) {
     const time_since_limited_at = getTimeSinceTwitterFriendIdsLimitedAt()
     if (time_since_limited_at === null || time_since_limited_at > 900000) {
       return 'add-twitter-friends'
     }
   }
+
 
   return 'scrape-url'
 

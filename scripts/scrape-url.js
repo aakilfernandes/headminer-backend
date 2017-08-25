@@ -11,8 +11,11 @@ return connection.query(`
   START TRANSACTION;
   SET @url_id := (
     SELECT urls.id FROM domains, urls
-    WHERE urls.scraped_at IS NULL AND domains.id = urls.domain_id AND domains.is_ignored = FALSE
-    LIMIT 1
+      WHERE urls.article_id IS NULL
+        AND domains.id = urls.domain_id
+        AND domains.is_ignored = FALSE
+      ORDER BY scraped_at ASC
+      LIMIT 1
   );
   SELECT * FROM urls WHERE id = @url_id;
   UPDATE urls SET scraped_at = NOW() WHERE id = @url_id;
@@ -51,17 +54,21 @@ return connection.query(`
     console.log(canonical_url_domain)
 
     return connection.query(`
+      START TRANSACTION;
       INSERT IGNORE INTO domains(domain) VALUE (?);
       INSERT IGNORE INTO urls(domain_id, url) VALUE ((SELECT id FROM domains WHERE domains.domain = ?), ?);
+      INSERT INTO articles(title, author, description, image) VALUES(?, ?, ?, ?);
       SET @canonical_url_id := (SELECT id FROM urls WHERE url = ? LIMIT 1);
-      UPDATE urls SET canonical_url_id = @canonical_url_id WHERE id = ?;
-      INSERT INTO articles(url_id, title, author, description, image) VALUES(?, ?, ?, ?, ?);
+      UPDATE urls
+        SET canonical_url_id = @canonical_url_id,
+        article_id = LAST_INSERT_ID()
+        WHERE id = ?;
+      COMMIT;
     `, [
       canonical_url_domain,
-      canonical_url_domain,
-      canonical_url,
-      canonical_url, url_pojo.id,
-      url_pojo.id, title, author, description, image
+      canonical_url_domain, canonical_url,
+      title, author, description, image,
+      canonical_url, url_pojo.id
     ])
   })
 }).finally(() => {

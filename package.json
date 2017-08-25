@@ -30,6 +30,8 @@
     "prompt": "^1.0.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
+    "restify": "^5.2.0",
+    "restify.js": "0.0.2",
     "rss-parser": "^2.10.0",
     "twitter": "^1.7.1",
     "valid-url": "^1.0.9"

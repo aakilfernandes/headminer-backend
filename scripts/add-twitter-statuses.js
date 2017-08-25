@@ -36,7 +36,7 @@ connection.query(`
     console.log(statuses.length)
 
     const insert_users_q_groups = getQGroups(statuses.length, 3)
-    const insert_statuses_q_groups = getQGroups(statuses.length, 3)
+    const insert_statuses_q_groups = getQGroups(statuses.length, 4)
     const insert_statuses_urls_q_groups = getQGroups(statuses.length, 2)
 
     const insert_users_values = []
@@ -52,7 +52,8 @@ connection.query(`
       insert_statuses_values.push(
         status.id_str,
         new Date(status.created_at),
-        status.user.id_str
+        status.user.id_str,
+        status.text
       )
       insert_statuses_urls_values.push(
         status.id_str,
@@ -74,7 +75,7 @@ connection.query(`
       `
       INSERT IGNORE INTO twitter_users(id, friends_count, followers_count)
       VALUES ${insert_users_q_groups};
-      INSERT IGNORE INTO twitter_statuses(id, created_at, user_id)
+      INSERT IGNORE INTO twitter_statuses(id, created_at, user_id, text)
       VALUES ${insert_statuses_q_groups};
       INSERT INTO twitter_statuses_urls(status_id, url_id)
       VALUES ${insert_statuses_urls_q_groups};
