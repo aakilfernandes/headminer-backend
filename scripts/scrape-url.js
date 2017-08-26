@@ -4,6 +4,7 @@ const parseHtml = require('../lib/parseHtml')
 const _ = require('lodash')
 const getQGroups = require('../lib/getQGroups')
 const urljs = require('url')
+const JSDOM = require('jsdom').JSDOM
 
 let hostname_pojos
 
@@ -11,8 +12,8 @@ return connection.query(`
   START TRANSACTION;
   SET @url_id := (
     SELECT urls.id FROM domains, urls
-      WHERE urls.article_id IS NULL
-        AND domains.id = urls.domain_id
+      WHERE
+        domains.id = urls.domain_id
         AND domains.is_ignored = FALSE
       ORDER BY scraped_at ASC
       LIMIT 1
@@ -43,7 +44,14 @@ return connection.query(`
       return url
     })
 
-    const title = parsed.meta['og:title'] || parsed.title
+    let special_title = null
+
+    if (url_pojo.domain_id === 429) {
+      const jsdom = new JSDOM(response.body)
+      special_title = jsdom.window.document.querySelector('.headline').textContent
+    }
+
+    const title = special_title || parsed.meta['og:title'] || parsed.title
     const author = parsed.meta['article:author'] || parsed.meta.author
     const description = parsed.meta['og:description'] || parsed.description
     const image = parsed.meta['og:image']
@@ -53,23 +61,47 @@ return connection.query(`
     console.log(canonical_url)
     console.log(canonical_url_domain)
 
-    return connection.query(`
-      START TRANSACTION;
-      INSERT IGNORE INTO domains(domain) VALUE (?);
-      INSERT IGNORE INTO urls(domain_id, url) VALUE ((SELECT id FROM domains WHERE domains.domain = ?), ?);
-      INSERT INTO articles(title, author, description, image) VALUES(?, ?, ?, ?);
-      SET @canonical_url_id := (SELECT id FROM urls WHERE url = ? LIMIT 1);
-      UPDATE urls
-        SET canonical_url_id = @canonical_url_id,
-        article_id = LAST_INSERT_ID()
-        WHERE id = ?;
-      COMMIT;
-    `, [
-      canonical_url_domain,
-      canonical_url_domain, canonical_url,
-      title, author, description, image,
-      canonical_url, url_pojo.id
-    ])
+    let article_promise
+
+    if (url_pojo.article_id !== null) {
+      article_promise = connection.query(`
+        INSERT INTO articles(title, author, description, image) VALUES (?, ?, ?, ?)
+      `, [
+        title,
+        author,
+        description,
+        image
+      ])
+    } else {
+      article_promise = connection.query(`
+        UPDATE INTO articles SET title = ?, author = ?, description = ?, image = ? where id = ?
+      `, [
+        title,
+        author,
+        description,
+        image,
+        url_pojo.article_id
+      ])
+    }
+
+    return article_promise.then(() => {
+      return connection.query(`
+        START TRANSACTION;
+        INSERT IGNORE INTO domains(domain) VALUE (?);
+        INSERT IGNORE INTO urls(domain_id, url) VALUE ((SELECT id FROM domains WHERE domains.domain = ?), ?);
+        SET @canonical_url_id := (SELECT id FROM urls WHERE url = ? LIMIT 1);
+        UPDATE urls
+          SET canonical_url_id = @canonical_url_id,
+          article_id = LAST_INSERT_ID()
+          WHERE id = ?;
+        COMMIT;
+      `, [
+        canonical_url_domain,
+        canonical_url_domain, canonical_url,
+        canonical_url,
+        url_pojo.id
+      ])
+    })
   })
 }).finally(() => {
   connection.end()

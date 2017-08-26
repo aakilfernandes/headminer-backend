@@ -18,6 +18,7 @@
     "event-emitter": "^0.3.5",
     "htmlparser2": "^3.9.2",
     "jobbit": "0.0.2",
+    "jsdom": "^11.2.0",
     "lets-get-meta": "^2.1.1",
     "lodash": "^4.17.4",
     "mysql": "^2.13.0",
