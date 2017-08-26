@@ -83,10 +83,15 @@ connection.query((`
           console.log(reddit_posts_count)
           console.log(twitter_statuses_count)
           return connection.query(`
+            INSERT INTO article_snapshots(article_id, reddit_posts_count, twitter_statuses_count)
+              VALUES(?, ?, ?);
             UPDATE articles
-            SET reddit_posts_count = ?, twitter_statuses_count = ?
-            WHERE id = ?
-          `, [reddit_posts_count, twitter_statuses_count, article.id])
+              SET reddit_posts_count = ?, twitter_statuses_count = ?
+              WHERE id = ?;
+          `, [
+            article.id, reddit_posts_count, twitter_statuses_count,
+            reddit_posts_count, twitter_statuses_count, article.id
+          ])
         })
       })
     })
