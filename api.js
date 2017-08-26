@@ -1,5 +1,6 @@
 const restify = require('restify')
 const connection = require('./lib/connection')
+const _ = require('lodash')
 
 const server = restify.createServer({
   name: 'headminer',
@@ -18,9 +19,11 @@ server.use(function crossOrigin(req,res,next){
 server.get('/articles/:id', function (req, res, next) {
   connection.query('SELECT * FROM articles WHERE id = ?', [req.params.id]).then((articles) => {
     const article = articles[0]
-    return connection.query('SELECT * FROM urls WHERE id = ?', [article.url_id]).then((urls) => {
-      const url = urls[0]
-      article.url = url
+    return connection.query('SELECT * FROM urls WHERE article_id = ?', [article.id]).then((urls) => {
+      article.urls = urls
+      article.url = _.find(urls, (url) => {
+        return url.id === url.canonical_url_id
+      })
       return connection.query('SELECT * FROM domains WHERE id = ?', [article.url.domain_id]).then((domains) => {
         const domain = domains[0]
         article.url.domain = domain
