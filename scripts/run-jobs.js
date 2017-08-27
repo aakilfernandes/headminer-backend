@@ -8,6 +8,7 @@ const getTimeSinceTwitterFriendIdsLimitedAt = require('../lib/getTimeSinceTwitte
 let add_reddit_posts_started_at = null
 let add_twitter_influencers_started_at = null
 let twitter_influencify_url_started_at = null
+let heatify_articles_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -68,6 +69,11 @@ function getNextScriptName() {
   if (twitter_influencify_url_started_at === null || Date.now() - twitter_influencify_url_started_at > 300000) {
     twitter_influencify_url_started_at = Date.now()
     return 'twitter-influencify-url'
+  }
+
+  if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 1000) {
+    heatify_articles_started_at = Date.now()
+    return 'heatify-articles'
   }
 
   const random = Math.random()
