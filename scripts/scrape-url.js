@@ -74,7 +74,7 @@ return connection.query(`
       ])
     } else {
       article_promise = connection.query(`
-        UPDATE INTO articles SET title = ?, author = ?, description = ?, image = ? where id = ?
+        UPDATE articles SET title = ?, author = ?, description = ?, image = ? where id = ?
       `, [
         title,
         author,
