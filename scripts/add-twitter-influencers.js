@@ -6,13 +6,22 @@ const twitter = require('../lib/twitter')
 const emojiStrip = require('emoji-strip')
 const _ = require('lodash')
 
+const seconds_in_a_day = 86400
+const second_of_the_day = new Date() % seconds_in_a_day
+const offset = Math.round((second_of_the_day / seconds_in_a_day) * 10000)
+console.log(offset)
+
+
 return connection.query(`
   SELECT friend_id, count(id)
   FROM twitter_friendships
   GROUP BY friend_id
   ORDER BY count(id) DESC
   LIMIT 900
-`).then((friendships) => {
+  OFFSET ?
+`, [offset]).then((friendships) => {
+  console.log(friendships.length);
+  return
 
   const get_and_inserts = friendships.map((friendship) => {
 

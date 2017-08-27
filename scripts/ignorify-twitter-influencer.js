@@ -11,15 +11,19 @@ const ask = Promise.promisify(prompt.get)
 prompt.start()
 
 function next() {
-  return connection.query('SELECT * FROM domains ORDER BY ignorified_at ASC, reddit_posts_count DESC LIMIT 1').then((domain_pojos) => {
-    const domain_pojo = domain_pojos[0]
-    return getIsIgnored(domain_pojo).then((is_ignored) => {
-      return connection.query('UPDATE domains SET ignorified_at = NOW(), is_ignored = ? WHERE id = ?', [
-        is_ignored, domain_pojo.id
+  return connection.query(`
+    SELECT * FROM twitter_influencers
+    ORDER BY ignorified_at ASC, users_count
+    DESC LIMIT 1`
+  ).then((influencers) => {
+    const influencer = influencers[0]
+    return getIsIgnored(influencer).then((is_ignored) => {
+      return connection.query('UPDATE twitter_influencers SET ignorified_at = NOW(), is_ignored = ? WHERE id = ?', [
+        is_ignored, influencer.id
       ])
     }, () => {
-      return connection.query('UPDATE domains SET ignorified_at = NOW() WHERE id = ?', [
-        domain_pojo.id
+      return connection.query('UPDATE twitter_influencers SET ignorified_at = NOW() WHERE id = ?', [
+        influencer.id
       ])
     }).finally(() => {
       return next()
@@ -27,13 +31,13 @@ function next() {
   })
 }
 
-function getIsIgnored(domain_pojo) {
+function getIsIgnored(influencer) {
 
-  const url = `http://${domain_pojo.domain}`
-  const question = `Is ${domain_pojo.domain} ignored?`
+  const url = `http://twitter.com/${influencer.screen_name}`
+  const question =
+  `Is ${influencer.screen_name} (${influencer.name}) ignored? ${influencer.description}`
 
   console.log('\033[2J');
-  console.log(`${domain_pojo.domain} (${domain_pojo.reddit_posts_count})`.green)
 
   opener('/Applications/Utilities/Terminal.app')
   setTimeout(() => {
@@ -51,7 +55,7 @@ function getIsIgnored(domain_pojo) {
         break;
       case 'c':
         chrome = opener(url)
-        return getIsIgnored(domain_pojo).then((answer) => {
+        return getIsIgnored(influencer).then((answer) => {
           chrome.unref()
           return answer
         })
@@ -60,7 +64,7 @@ function getIsIgnored(domain_pojo) {
       case 's':
         return null
       default:
-        return getIsIgnored(domain_pojo)
+        return getIsIgnored(influencer)
     }
   })
 }
