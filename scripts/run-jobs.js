@@ -72,8 +72,12 @@ function getNextScriptName() {
 
   const random = Math.random()
 
-  if (random < .2) {
+  if (random < .1) {
     return 'coallesce-article'
+  }
+
+  if (random < .2) {
+    return 'add-reddit-snapshot'
   }
 
   if (random < .6) {
