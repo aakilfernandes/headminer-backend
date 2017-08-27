@@ -83,7 +83,7 @@ function getNextScriptName() {
   }
 
   if (random < .6) {
-    return 'add-reddit-post-snapshot'
+    return 'add-reddit-post-snapshots'
   }
 
   if (random < .7) {
