@@ -78,15 +78,15 @@ function getNextScriptName() {
 
   const random = Math.random()
 
-  if (random < .1) {
+  if (random < .4) {
     return 'coallesce-article'
   }
 
-  if (random < .2) {
+  if (random < .6) {
     return 'add-reddit-post-snapshot'
   }
 
-  if (random < .6) {
+  if (random < .7) {
     const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
     if (time_since_limited_at === null || time_since_limited_at > 900000) {
       return 'add-twitter-statuses'

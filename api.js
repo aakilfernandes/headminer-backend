@@ -34,6 +34,15 @@ server.get('/articles/:id', function (req, res, next) {
   })
 })
 
+server.get('/hot/', function (req, res, next) {
+  connection.query('SELECT id FROM articles ORDER BY heat DESC LIMIT 100', []).then((articles) => {
+    const ids = articles.map((article) => {
+      return article.id
+    })
+    res.send(ids)
+  })
+})
+
 server.listen(4001, function () {
   console.log('%s listening at %s', server.name, server.url);
 })

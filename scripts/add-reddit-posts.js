@@ -22,7 +22,7 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
   const insert_domains_q_groups = getQGroups(posts.length, 2)
   const insert_subreddits_q_groups = getQGroups(posts.length, 3)
   const insert_urls_q_groups = getQGroups(posts.length, 2, ', (SELECT id FROM domains WHERE domain = ? LIMIT 1)')
-  const insert_posts_q_groups = getQGroups(posts.length, 3, ', (SELECT id FROM urls WHERE url = ? LIMIT 1)')
+  const insert_posts_q_groups = getQGroups(posts.length, 4, ', (SELECT id FROM urls WHERE url = ? LIMIT 1)')
   const insert_domains_values = []
   const insert_subreddits_values = []
   const insert_urls_values = []
@@ -49,6 +49,7 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
       post.id,
       new Date(post.created_utc * 1000),
       subreddit_id,
+      post.score,
       post.url
     )
   })
@@ -64,7 +65,7 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
     INSERT IGNORE INTO domains(domain, reddit_posts_count) VALUES ${insert_domains_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
     INSERT IGNORE INTO reddit_subreddits(id, name, reddit_posts_count) VALUES ${insert_subreddits_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
     INSERT IGNORE INTO urls(url, reddit_posts_count, domain_id) VALUES ${insert_urls_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
-    INSERT IGNORE INTO reddit_posts(id, created_at, subreddit_id, url_id) VALUES ${insert_posts_q_groups};
+    INSERT IGNORE INTO reddit_posts(id, created_at, subreddit_id, url_id, score) VALUES ${insert_posts_q_groups};
     `,
     all_insert_values
   )
