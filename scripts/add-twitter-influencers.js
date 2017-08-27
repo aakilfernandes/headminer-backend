@@ -11,7 +11,7 @@ return connection.query(`
   FROM twitter_friendships
   GROUP BY friend_id
   ORDER BY count(id) DESC
-  LIMIT 1
+  LIMIT 900
 `).then((friendships) => {
 
   const get_and_inserts = friendships.map((friendship) => {
