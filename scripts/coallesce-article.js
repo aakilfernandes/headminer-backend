@@ -74,23 +74,28 @@ connection.query((`
         })
         const url_ids_qs = getQs(url_ids.length)
         return connection.query(`
-          SELECT count(id) FROM reddit_posts WHERE url_id IN (${url_ids_qs});
+          SELECT * FROM reddit_posts WHERE url_id IN (${url_ids_qs});
           SELECT count(id) FROM twitter_statuses_urls WHERE url_id IN (${url_ids_qs});
           `, url_ids.concat(url_ids)
         ).then((results) => {
-          const reddit_posts_count = results[0][0]['count(id)']
+          const reddit_posts = results[0]
           const twitter_statuses_count = results[1][0]['count(id)']
-          console.log(reddit_posts_count)
+          const reddit_score = reddit_posts.reduce((_reddit_score, reddit_post) => {
+            return _reddit_score + reddit_post.score
+          }, 0)
+          console.log(reddit_posts.length)
+          console.log(reddit_score)
           console.log(twitter_statuses_count)
           return connection.query(`
-            INSERT INTO article_snapshots(article_id, reddit_posts_count, twitter_statuses_count)
-              VALUES(?, ?, ?);
+            INSERT INTO article_snapshots(article_id, reddit_posts_count, twitter_statuses_count, reddit_score)
+              VALUES(?, ?, ?, ?);
             UPDATE articles
-              SET reddit_posts_count = ?, twitter_statuses_count = ?
+              SET reddit_posts_count = ?, twitter_statuses_count = ?, reddit_score = ?
               WHERE id = ?;
           `, [
-            article.id, reddit_posts_count, twitter_statuses_count,
-            reddit_posts_count, twitter_statuses_count, article.id
+            article.id, reddit_posts.length, twitter_statuses_count, reddit_score,
+            reddit_posts.length, twitter_statuses_count, reddit_score,
+            article.id
           ])
         })
       })
