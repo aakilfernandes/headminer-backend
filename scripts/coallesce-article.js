@@ -87,22 +87,15 @@ connection.query((`
           console.log(reddit_score)
           console.log(twitter_statuses_count)
 
-          const reddit_heat = reddit_posts.length + reddit_score
-          const twitter_heat = twitter_statuses_count / 250
-          const social_heat = Math.log10(Math.abs(reddit_heat) + twitter_heat) || 0
-          // TODO: Add time factor
-          const heat = social_heat.toFixed(4)
-          console.log(heat)
-
           return connection.query(`
-            INSERT INTO article_snapshots(article_id, heat, reddit_posts_count, twitter_statuses_count, reddit_score)
-              VALUES(?, ?, ?, ?, ?);
-            UPDATE articles
-              SET heat = ?, reddit_posts_count = ?, twitter_statuses_count = ?, reddit_score = ?
+            INSERT INTO article_snapshots(article_id, reddit_posts_count, twitter_statuses_count, reddit_score)
+              VALUES(?, ?, ?, ?);
+            UPDATE articles SET
+              reddit_posts_count = ?, twitter_statuses_count = ?, reddit_score = ?
               WHERE id = ?;
           `, [
-            article.id, heat, reddit_posts.length, twitter_statuses_count, reddit_score,
-            heat, reddit_posts.length, twitter_statuses_count, reddit_score,
+            article.id, reddit_posts.length, twitter_statuses_count, reddit_score,
+            reddit_posts.length, twitter_statuses_count, reddit_score,
             article.id
           ])
         })
