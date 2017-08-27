@@ -11,7 +11,7 @@ return connection.query(`
   FROM twitter_friendships
   GROUP BY friend_id
   ORDER BY count(id) DESC
-  LIMIT 900
+  LIMIT 1
 `).then((friendships) => {
 
   const get_and_inserts = friendships.map((friendship) => {
@@ -22,17 +22,19 @@ return connection.query(`
       return twitter.get('users/show', { user_id: friendship.friend_id }).then((user) => {
         return connection.query(`
           INSERT IGNORE INTO twitter_influencers
-          (id, name, screen_name, followers_count, profile_image_url, users_count)
-          VALUES(?, ?, ?, ?, ?, ?)
+          (id, name, screen_name, description, followers_count, profile_image_url, users_count)
+          VALUES(?, ?, ?, ?, ?, ?, ?)
           ON DUPLICATE KEY UPDATE
-          followers_count = ?, profile_image_url = ?, users_count = ?;
+          description = ?, followers_count = ?, profile_image_url = ?, users_count = ?;
         `, [
           user.id_str,
           emojiStrip(user.name),
           user.screen_name,
+          user.description,
           user.followers_count,
           user.profile_image_url_https,
           users_count,
+          user.description,
           user.followers_count,
           user.profile_image_url_https,
           users_count
