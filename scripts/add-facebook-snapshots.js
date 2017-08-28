@@ -7,6 +7,7 @@ const _ = require('lodash')
 const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
 const updateFacebookLimitedAt = require('../lib/updateFacebookLimitedAt')
+const fs = require('fs')
 
 return connection.query(`
   SELECT urls.* FROM urls, domains
@@ -53,7 +54,7 @@ return connection.query(`
     })
   })
 }).catch((error) => {
-  if (error[0] && error[0].code === 88) {
+  if (error && error.statusCode === 403) {
     updateFacebookLimitedAt()
   }
   throw error
