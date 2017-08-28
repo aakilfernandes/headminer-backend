@@ -80,22 +80,50 @@ connection.query((`
         ).then((results) => {
           const reddit_posts = results[0]
           const twitter_statuses_count = results[1][0]['count(id)']
-          const reddit_score = reddit_posts.reduce((_reddit_score, reddit_post) => {
-            return _reddit_score + reddit_post.score
+          const reddit_score = reddit_posts.reduce((sum, reddit_post) => {
+            return sum + reddit_post.score
+          }, 0)
+          const facebook_share_count = urls.reduce((sum, url_pojo) => {
+            return sum + url_pojo.facebook_share_count
+          }, 0)
+          const facebook_comment_count = urls.reduce((sum, url_pojo) => {
+            return sum + url_pojo.facebook_comment_count
           }, 0)
           console.log(reddit_posts.length)
           console.log(reddit_score)
           console.log(twitter_statuses_count)
+          console.log(facebook_share_count)
+          console.log(facebook_comment_count)
 
           return connection.query(`
-            INSERT INTO article_snapshots(article_id, reddit_posts_count, twitter_statuses_count, reddit_score)
-              VALUES(?, ?, ?, ?);
+            INSERT INTO article_snapshots(
+                article_id,
+                reddit_posts_count,
+                twitter_statuses_count,
+                reddit_score,
+                facebook_share_count,
+                facebook_comment_count
+              )
+              VALUES(?, ?, ?, ?, ?, ?);
             UPDATE articles SET
-              reddit_posts_count = ?, twitter_statuses_count = ?, reddit_score = ?
+              reddit_posts_count = ?,
+              twitter_statuses_count = ?,
+              reddit_score = ?,
+              facebook_share_count = ?,
+              facebook_comment_count = ?
               WHERE id = ?;
           `, [
-            article.id, reddit_posts.length, twitter_statuses_count, reddit_score,
-            reddit_posts.length, twitter_statuses_count, reddit_score,
+            article.id,
+            reddit_posts.length,
+            twitter_statuses_count,
+            reddit_score,
+            facebook_share_count,
+            facebook_comment_count,
+            reddit_posts.length,
+            twitter_statuses_count,
+            reddit_score,
+            facebook_share_count,
+            facebook_comment_count,
             article.id
           ])
         })
