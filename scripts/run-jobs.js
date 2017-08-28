@@ -10,6 +10,7 @@ let add_reddit_posts_started_at = null
 let add_twitter_influencers_started_at = null
 let twitter_influencify_url_started_at = null
 let heatify_articles_started_at = null
+let add_facebook_snapshots_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -77,14 +78,15 @@ function getNextScriptName() {
     return 'heatify-articles'
   }
 
-  const random = Math.random()
-
-  if (random < .1) {
+  if (add_facebook_snapshots_started_at === null || Date.now() - add_facebook_snapshots_started_at > 60000) {
     const time_since_limited_at = getTimeSinceFacebookLimitedAt()
     if (time_since_limited_at === null || time_since_limited_at > 600000) {
+      add_facebook_snapshots_started_at = Date.now()
       return 'add-facebook-snapshots'
     }
   }
+
+  const random = Math.random()
 
   if (random < .4) {
     return 'coallesce-article'
