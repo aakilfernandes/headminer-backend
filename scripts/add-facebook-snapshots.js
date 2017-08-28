@@ -23,9 +23,9 @@ return connection.query(`
 
     const fetches = url_pojos.map((url_pojo) => {
       queries.push(`
-        UPDATE urls SET facebook_share_count = ?, facebook_comment_count = ? WHERE id = ?;
-        INSERT INTO facebook_snapshots(url_id, og_id, updated_time, share_count, comment_count)
-          VALUES(?, ?, ?, ?, ?);
+        UPDATE urls SET og_id = ?, facebook_share_count = ?, facebook_comment_count = ? WHERE id = ?;
+        INSERT INTO facebook_snapshots(url_id, updated_time, share_count, comment_count)
+          VALUES(?, ?, ?, ?);
       `)
       return function fetch() {
         return request(`http://graph.facebook.com/?id=${url_pojo.url}`).then((body) => {
@@ -33,11 +33,11 @@ return connection.query(`
           const og_id = og_pojo.og_object ? og_pojo.og_object.id : null
           const updated_time = og_pojo.og_object ? new Date(og_pojo.og_object.updated_time) : null
           values.push(
+            og_id,
             og_pojo.share.share_count,
             og_pojo.share.comment_count,
             url_pojo.id,
             url_pojo.id,
-            og_id,
             updated_time,
             og_pojo.share.share_count,
             og_pojo.share.comment_count
