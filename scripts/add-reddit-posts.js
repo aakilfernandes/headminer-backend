@@ -45,6 +45,7 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
       1,
       domain
     )
+    console.log(post.id)
     insert_posts_values.push(
       post.id,
       new Date(post.created_utc * 1000),
@@ -66,7 +67,7 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
     INSERT IGNORE INTO domains(domain, reddit_posts_count) VALUES ${insert_domains_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
     INSERT IGNORE INTO reddit_subreddits(id, name, reddit_posts_count) VALUES ${insert_subreddits_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
     INSERT IGNORE INTO urls(url, reddit_posts_count, domain_id) VALUES ${insert_urls_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
-    INSERT IGNORE INTO reddit_posts(id, created_at, subreddit_id, url_id, score, comments_count) VALUES ${insert_posts_q_groups};
+    INSERT IGNORE INTO reddit_posts(id, created_at, subreddit_id, score, comments_count, url_id) VALUES ${insert_posts_q_groups};
     `,
     all_insert_values
   )
