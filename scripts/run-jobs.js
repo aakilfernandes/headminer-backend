@@ -4,6 +4,7 @@ const connection = require('../lib/connection')
 const fs = require('fs')
 const getTimeSinceTwitterSearchLimitedAt = require('../lib/getTimeSinceTwitterSearchLimitedAt')
 const getTimeSinceTwitterFriendIdsLimitedAt = require('../lib/getTimeSinceTwitterFriendIdsLimitedAt')
+const getTimeSinceFacebookLimitedAt = require('../lib/getTimeSinceFacebookLimitedAt')
 
 let add_reddit_posts_started_at = null
 let add_twitter_influencers_started_at = null
@@ -79,7 +80,10 @@ function getNextScriptName() {
   const random = Math.random()
 
   if (random < .1) {
-    return 'add-facebook-snapshots'
+    const time_since_limited_at = getTimeSinceFacebookLimitedAt()
+    if (time_since_limited_at === null || time_since_limited_at > 600000) {
+      return 'add-facebook-snapshots'
+    }
   }
 
   if (random < .4) {
