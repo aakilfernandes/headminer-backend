@@ -78,6 +78,10 @@ function getNextScriptName() {
 
   const random = Math.random()
 
+  if (random < .1) {
+    return 'add-facebook-snapshots'
+  }
+
   if (random < .4) {
     return 'coallesce-article'
   }
