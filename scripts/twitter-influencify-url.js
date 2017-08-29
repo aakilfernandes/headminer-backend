@@ -3,6 +3,7 @@ const _ = require('lodash')
 const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
 
+const user_sample_size = 1000
 
 connection.query(
   `SELECT * FROM twitter_influencers WHERE is_ignored = 0 ORDER BY id`
@@ -11,71 +12,69 @@ connection.query(
     return
   }
   return connection.query(`
-    START TRANSACTION;
-    SELECT @url_id := twitter_statuses_urls.url_id, twitter_statuses_urls.url_id, COUNT(twitter_statuses_urls.id)
-      AS url_count FROM urls, twitter_statuses_urls
-      WHERE urls.id = twitter_statuses_urls.url_id
-      GROUP BY url_id HAVING url_count >= 100
-      ORDER BY urls.twitter_influencified_at ASC, url_count DESC
-      LIMIT 1;
-    UPDATE urls SET twitter_influencified_at = NOW() WHERE id = @url_id;
-    COMMIT;
-  `).then((results) => {
-    const url_id = results[1][0].url_id
+    SELECT urls.* FROM urls, domains
+    WHERE urls.domain_id = domains.id
+      AND domains.is_ignored = 0
+      AND urls.twitter_statuses_count > 100
+    ORDER BY twitter_influencified_at ASC
+    LIMIT 100;
+  `).then((url_pojos) => {
 
-    console.log(url_id)
+    const url_ids = _.map(url_pojos, 'id')
+    const url_ids_qs = getQs(url_ids.length)
 
     return connection.query(`
-      SELECT * FROM twitter_statuses_urls WHERE url_id = ?
-    `, [url_id]).then((statuses_urls) => {
+      UPDATE urls SET twitter_influencified_at = NOW() WHERE id IN (${url_ids_qs})
+    `, url_ids).then(() => {
+      const influencifies = url_pojos.map((url_pojo) => {
+        const multiplier = Math.max(1, url_pojo.twitter_statuses_count / user_sample_size)
+        return function influencify() {
+          return connection.query(
+            `SELECT twitter_users.*
+            FROM twitter_users, twitter_statuses, twitter_statuses_urls
+            WHERE twitter_statuses_urls.url_id = ?
+              AND twitter_statuses.id = twitter_statuses_urls.status_id
+              AND twitter_users.id = twitter_statuses.user_id
+            ORDER BY RAND() LIMIT ?`,
+            [url_pojo.id, user_sample_size]
+          ).then((users) => {
 
-      const status_ids = statuses_urls.map((statuses_url) => {
-        return statuses_url.status_id
-      })
-      const select_status_ids_qs = getQs(status_ids.length)
+            const user_ids = _.map(users, 'id')
+            const select_user_ids_qs = getQs(user_ids.length)
+            const queries = []
+            const values = []
 
-      return connection.query(`
-        SELECT user_id FROM twitter_statuses WHERE id IN (${select_status_ids_qs})
-      `, status_ids).then((statuses) => {
-        const user_ids = _.uniq(statuses.map((status) => {
-          return status.user_id
-        }))
-
-        const select_user_ids_qs = getQs(user_ids.length)
-
-        return connection.query(`
-          SELECT * FROM twitter_users WHERE id IN (${select_user_ids_qs})
-        `, user_ids).then((users) => {
-          const inserts = []
-          influencers.forEach((influencer, index) => {
-            inserts.push(function insert() {
-              return connection.query(`
+            influencers.forEach((influencer, index) => {
+              queries.push(`
                 START TRANSACTION;
-                SET @users_count := (
+                SET @sample_influence := (
                   SELECT COUNT(id) FROM twitter_friendships
                   WHERE user_id IN (${select_user_ids_qs}) AND friend_id = ?
-                  GROUP BY friend_id
                 );
-                SET @influence = @users_count / ?;
                 INSERT IGNORE INTO
                   twitter_urls_influences(url_id, influencer_id, influence)
                   VALUES(?, ?, @influence)
-                  ON DUPLICATE KEY UPDATE influence = @influence;
+                  ON DUPLICATE KEY UPDATE influence = ROUND(@sample_influence * ?);
                 COMMIT;
-              `,
-              user_ids.concat([
+              `)
+              values.push(...user_ids)
+              values.push(
                 influencer.id,
-                influencer.followers_count,
-                url_id,
+                url_pojo.id,
                 influencer.id,
-              ])
-            )
+                multiplier
+              )
+            })
+            const query = queries.join('\r\n')
+            return connection.query(query, values)
           })
-        })
-        return waterfall(inserts)
-        })
+        }
       })
+
+      return waterfall(influencifies)
     })
+
+
   })
 }).finally(() => {
   connection.end()
