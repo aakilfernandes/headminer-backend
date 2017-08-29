@@ -53,7 +53,7 @@ connection.query(
                 );
                 INSERT IGNORE INTO
                   twitter_urls_influences(url_id, influencer_id, influence)
-                  VALUES(?, ?, @influence)
+                  VALUES(?, ?, @sample_influence)
                   ON DUPLICATE KEY UPDATE influence = ROUND(@sample_influence * ?);
                 COMMIT;
               `)
