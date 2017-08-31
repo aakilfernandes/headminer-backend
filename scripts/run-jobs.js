@@ -11,6 +11,7 @@ let add_twitter_influencers_started_at = null
 let twitter_influencify_url_started_at = null
 let heatify_articles_started_at = null
 let add_facebook_snapshots_started_at = null
+let twitter_influencify_articles_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -71,6 +72,11 @@ function getNextScriptName() {
   if (twitter_influencify_url_started_at === null || Date.now() - twitter_influencify_url_started_at > 300000) {
     twitter_influencify_url_started_at = Date.now()
     return 'twitter-influencify-url'
+  }
+
+  if (twitter_influencify_articles_started_at === null || Date.now() - twitter_influencify_articles_started_at > 300000) {
+    twitter_influencify_articles_started_at = Date.now()
+    return 'twitter_influencify_articles_started_at'
   }
 
   if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 60000) {
