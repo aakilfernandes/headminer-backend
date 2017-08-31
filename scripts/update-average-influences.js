@@ -19,12 +19,11 @@ connection.query(`
         ORDER BY rand()
         LIMIT 1000
       `, [influencer.id]).then((results) => {
-        console.log(influencer.id)
         let twitter_statuses_count = 0
         let influence = 0
         results.forEach((result) => {
           twitter_statuses_count += result.twitter_statuses_count
-          influence += (result.twitter_statuses_count * result.influence)
+          influence += result.influence
         })
 
         queries.push(`UPDATE twitter_influencers SET average_influence = ? WHERE id = ?;`);
