@@ -76,7 +76,7 @@ function getNextScriptName() {
 
   if (twitter_influencify_articles_started_at === null || Date.now() - twitter_influencify_articles_started_at > 300000) {
     twitter_influencify_articles_started_at = Date.now()
-    return 'twitter_influencify_articles'
+    return 'twitter-influencify-articles'
   }
 
   if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 60000) {
