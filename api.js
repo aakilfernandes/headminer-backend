@@ -27,6 +27,21 @@ server.get('/articles/:id', function (req, res, next) {
       return connection.query('SELECT * FROM domains WHERE id = ?', [article.url.domain_id]).then((domains) => {
         const domain = domains[0]
         article.url.domain = domain
+      })
+    }).then(() => {
+      return connection.query(`
+        SELECT
+          twitter_influencers.*,
+          twitter_articles_influences.influence,
+          twitter_articles_influences.adjusted_influence
+        FROM twitter_influencers, twitter_articles_influences
+        WHERE
+          twitter_articles_influences.article_id = ?
+          AND twitter_influencers.id = twitter_articles_influences.influencer_id
+          AND twitter_influencers.is_ignored = 0
+        ORDER BY twitter_articles_influences.adjusted_influence DESC
+      `, [article.id]).then((influencers) => {
+        article.influencers = influencers
         res.send(article)
         next()
       })
@@ -35,7 +50,7 @@ server.get('/articles/:id', function (req, res, next) {
 })
 
 server.get('/hot/', function (req, res, next) {
-  connection.query('SELECT id FROM articles ORDER BY heat DESC LIMIT 10', []).then((articles) => {
+  connection.query('SELECT id FROM articles ORDER BY heat DESC LIMIT 2', []).then((articles) => {
     const ids = articles.map((article) => {
       return article.id
     })

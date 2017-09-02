@@ -45,7 +45,14 @@ connection.query(`
     queries.push(`
       UPDATE twitter_articles_influences
       SET adjusted_influence = (
-        SELECT (twitter_articles_influences.influence - (twitter_influencers.average_influence * articles.twitter_statuses_count)) / twitter_influencers.followers_count
+        SELECT (
+          (
+            (
+              (twitter_articles_influences.influence / articles.twitter_statuses_count)
+              - twitter_influencers.influence_pts_average
+            )
+            / twitter_influencers.influence_pts_variance
+        )
         FROM twitter_influencers, articles
         WHERE twitter_articles_influences.article_id = articles.id
         	AND twitter_articles_influences.influencer_id = twitter_influencers.id
