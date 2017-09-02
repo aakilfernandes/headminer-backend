@@ -50,7 +50,7 @@ server.get('/articles/:id', function (req, res, next) {
 })
 
 server.get('/hot/', function (req, res, next) {
-  connection.query('SELECT id FROM articles ORDER BY heat DESC LIMIT 2', []).then((articles) => {
+  connection.query('SELECT id FROM articles ORDER BY heat DESC LIMIT 10', []).then((articles) => {
     const ids = articles.map((article) => {
       return article.id
     })

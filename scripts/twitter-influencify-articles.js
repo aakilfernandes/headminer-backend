@@ -51,7 +51,7 @@ connection.query(`
               (twitter_articles_influences.influence / articles.twitter_statuses_count)
               - twitter_influencers.influence_pts_average
             )
-            / twitter_influencers.influence_pts_stdev
+            / twitter_influencers.influence_pts_wstdev
           )
         )
         FROM twitter_influencers, articles
