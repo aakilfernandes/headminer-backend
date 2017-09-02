@@ -46,6 +46,10 @@ connection.query(`
           }
         })
 
+        if (nonzero_influences_count <= 1) {
+          return
+        }
+
         const influence_pts_wstdev = Math.pow(
           influence_pts_average / (
             influence * ((nonzero_influences_count - 1) / nonzero_influences_count)
