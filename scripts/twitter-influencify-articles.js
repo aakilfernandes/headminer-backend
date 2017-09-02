@@ -51,7 +51,7 @@ connection.query(`
               (twitter_articles_influences.influence / articles.twitter_statuses_count)
               - twitter_influencers.influence_pts_average
             )
-            / twitter_influencers.influence_pts_variance
+            / twitter_influencers.influence_pts_stdev
         )
         FROM twitter_influencers, articles
         WHERE twitter_articles_influences.article_id = articles.id

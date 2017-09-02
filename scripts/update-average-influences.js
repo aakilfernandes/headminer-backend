@@ -27,6 +27,9 @@ connection.query(`
         const influence_ptss = []
 
         results.forEach((result) => {
+          if (result.twitter_statuses_count === 0) {
+            return
+          }
           twitter_statuses_count += result.twitter_statuses_count
           influence += result.influence
           const influence_pts = result.influence / result.twitter_statuses_count
