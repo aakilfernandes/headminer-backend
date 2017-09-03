@@ -10,9 +10,7 @@ const updateFacebookLimitedAt = require('../lib/updateFacebookLimitedAt')
 const fs = require('fs')
 const getSecret = require('../lib/getSecret')
 
-const proxyRequest = request.defaults({
-  proxy: getSecret('proxy')
-})
+const proxies = getSecret('proxies').split('\n')
 
 return connection.query(`
   SELECT urls.* FROM urls, domains
@@ -35,7 +33,12 @@ return connection.query(`
           VALUES(?, ?, ?, ?);
       `)
       return function fetch() {
-        return proxyRequest(`http://graph.facebook.com/?id=${url_pojo.url}`).then((body) => {
+        const proxy = _.sample(proxies)
+        console.log(proxy)
+        const proxyRequest = request.defaults({ proxy })
+        return proxyRequest(
+          `http://graph.facebook.com/?id=${url_pojo.url}`
+        ).then((body) => {
           const og_pojo = JSON.parse(body)
           const og_id = og_pojo.og_object ? og_pojo.og_object.id : null
           const updated_time = og_pojo.og_object ? new Date(og_pojo.og_object.updated_time) : null
@@ -56,13 +59,16 @@ return connection.query(`
     return waterfall(fetches).then(() => {
       const query = queries.join('\r\n')
       return connection.query(query, values)
+    }, (error) => {
+      if (error && error.statusCode === 403) {
+        updateFacebookLimitedAt()
+      }
+      const query = queries.join('\r\n')
+      return connection.query(query, values).then(() => {
+        throw error
+      })
     })
   })
-}).catch((error) => {
-  if (error && error.statusCode === 403) {
-    updateFacebookLimitedAt()
-  }
-  throw error
 }).finally(() => {
   connection.end()
 })
