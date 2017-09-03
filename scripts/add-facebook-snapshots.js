@@ -36,7 +36,6 @@ return connection.query(`
       `)
       return function fetch() {
         return proxyRequest(`http://graph.facebook.com/?id=${url_pojo.url}`).then((body) => {
-          console.log(body)
           const og_pojo = JSON.parse(body)
           const og_id = og_pojo.og_object ? og_pojo.og_object.id : null
           const updated_time = og_pojo.og_object ? new Date(og_pojo.og_object.updated_time) : null
