@@ -69,7 +69,7 @@ function getNextScriptName() {
     return 'add-twitter-influencers'
   }
 
-  if (twitter_influencify_url_started_at === null || Date.now() - twitter_influencify_url_started_at > 300000) {
+  if (twitter_influencify_url_started_at === null || Date.now() - twitter_influencify_url_started_at > 10000) {
     twitter_influencify_url_started_at = Date.now()
     return 'twitter-influencify-url'
   }
