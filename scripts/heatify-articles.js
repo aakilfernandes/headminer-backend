@@ -1,10 +1,12 @@
 const connection = require('../lib/connection')
 const getQs = require('../lib/getQs')
 
+const period_ms = 1000 * 60 * 60 * 4
+
 return connection.query(`
   SELECT * FROM articles
   WHERE coallesced_at IS NOT NULL
-  ORDER BY heatified_at ASC, id ASC LIMIT 1000;
+  ORDER BY heatified_at ASC, id ASC LIMIT 10000;
 
   SELECT AVG(reddit_score) FROM articles;
   SELECT AVG(twitter_statuses_count) FROM articles;
@@ -18,13 +20,13 @@ return connection.query(`
   const queries = []
   const values = []
 
-  articles.forEach((article) => {
+  articles.forEach((article, index) => {
 
     const reddit_score_count_heat = article.reddit_score / average_reddit_score
     const twitter_heat = article.twitter_statuses_count / average_twitter_statuses_count
     const facebook_share_count_heat = article.facebook_share_count / average_facebook_share_count
 
-    const heat = [
+    const untimed_heat = [
       reddit_score_count_heat,
       twitter_heat,
       facebook_share_count_heat
@@ -34,7 +36,9 @@ return connection.query(`
       }
       const logged_heat = Math.log10(1 + _heat)
       return sum + logged_heat
-    }, 0).toFixed(4)
+    }, 0)
+    const periods = (new Date() - article.created_at) / period_ms
+    const heat = untimed_heat / periods
 
     queries.push('UPDATE articles SET heat = ?, heatified_at = NOW() WHERE id = ?;')
     values.push(heat, article.id)

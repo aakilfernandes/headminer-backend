@@ -65,7 +65,7 @@ return connection.query(`
 
     if (url_pojo.article_id !== null) {
       article_promise = connection.query(`
-        INSERT INTO articles(title, author, description, image) VALUES (?, ?, ?, ?)
+        INSERT INTO articles(title, author, description, image) VALUES (?, ?, ?, ?);
       `, [
         title,
         author,
