@@ -64,7 +64,7 @@ function getNextScriptName() {
     return 'add-reddit-posts'
   }
 
-  if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 600000) {
+  if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 10000) {
     add_twitter_influencers_started_at = Date.now()
     return 'add-twitter-influencers'
   }
