@@ -15,6 +15,7 @@ return connection.query(`
       WHERE
         domains.id = urls.domain_id
         AND domains.is_ignored = FALSE
+        AND urls.article_id IS NULL
       ORDER BY scraped_at ASC
       LIMIT 1
   );
@@ -58,12 +59,9 @@ return connection.query(`
     const canonical_url = urls[0]
     const canonical_url_domain = urljs.parse(canonical_url).hostname
 
-    console.log(canonical_url)
-    console.log(canonical_url_domain)
-
     let article_promise
 
-    if (url_pojo.article_id !== null) {
+    if (url_pojo.article_id === null) {
       article_promise = connection.query(`
         INSERT INTO articles(title, author, description, image) VALUES (?, ?, ?, ?);
       `, [
@@ -84,7 +82,9 @@ return connection.query(`
       ])
     }
 
-    return article_promise.then(() => {
+    return article_promise.then((results) => {
+      const article_id = url_pojo.article_id ? url_pojo.article_id : results.insertId
+      console.log(article_id)
       return connection.query(`
         START TRANSACTION;
         INSERT IGNORE INTO domains(domain) VALUE (?);
@@ -92,13 +92,14 @@ return connection.query(`
         SET @canonical_url_id := (SELECT id FROM urls WHERE url = ? LIMIT 1);
         UPDATE urls
           SET canonical_url_id = @canonical_url_id,
-          article_id = LAST_INSERT_ID()
+          article_id = ?
           WHERE id = ?;
         COMMIT;
       `, [
         canonical_url_domain,
         canonical_url_domain, canonical_url,
         canonical_url,
+        article_id,
         url_pojo.id
       ])
     })
