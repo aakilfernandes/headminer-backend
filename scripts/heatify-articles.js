@@ -38,7 +38,7 @@ return connection.query(`
       return sum + logged_heat
     }, 0)
     const periods = (new Date() - article.created_at) / period_ms
-    const heat = untimed_heat / periods
+    const heat = untimed_heat / Math.max(1, periods)
 
     queries.push('UPDATE articles SET heat = ?, heatified_at = NOW() WHERE id = ?;')
     values.push(heat, article.id)
