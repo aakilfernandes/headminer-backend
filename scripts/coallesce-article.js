@@ -68,8 +68,26 @@ connection.query((`
     }).then(() => {
       return connection.query(
         'SELECT * FROM urls WHERE article_id = ?', [article.id]
-      ).then((urls) => {
-        const url_ids = _.map(urls, (url) => {
+      ).then((url_pojos) => {
+
+        let is_ready = true
+
+        _.forEach(url_pojos, (url_pojo) => {
+          if (
+            !url_pojo.twitter_statuses_added_at
+            || !url_pojo.facebook_snapshot_added_at
+          ) {
+            is_ready = false
+            return false
+          }
+        })
+
+        if (!is_ready) {
+          return
+        }
+
+
+        const url_ids = _.map(url_pojos, (url) => {
           return url.id
         })
         const url_ids_qs = getQs(url_ids.length)
@@ -83,10 +101,10 @@ connection.query((`
           const reddit_score = reddit_posts.reduce((sum, reddit_post) => {
             return sum + reddit_post.score
           }, 0)
-          const facebook_share_count = urls.reduce((sum, url_pojo) => {
+          const facebook_share_count = url_pojos.reduce((sum, url_pojo) => {
             return sum + url_pojo.facebook_share_count
           }, 0)
-          const facebook_comment_count = urls.reduce((sum, url_pojo) => {
+          const facebook_comment_count = url_pojos.reduce((sum, url_pojo) => {
             return sum + url_pojo.facebook_comment_count
           }, 0)
           console.log(reddit_posts.length)

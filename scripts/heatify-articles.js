@@ -5,7 +5,8 @@ const period_ms = 1000 * 60 * 60 * 4
 
 return connection.query(`
   SELECT * FROM articles
-  WHERE coallesced_at IS NOT NULL
+  WHERE twitter_statuses_count IS NOT NULL
+    AND facebook_share_count IS NOT NULL
   ORDER BY heatified_at ASC, id ASC LIMIT 10000;
 
   SELECT AVG(reddit_score) FROM articles;
