@@ -12,6 +12,7 @@ let twitter_influencify_url_started_at = null
 let heatify_articles_started_at = null
 let add_facebook_snapshots_started_at = null
 let twitter_influencify_articles_started_at = null
+let add_twitter_statuses_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -64,9 +65,10 @@ function getNextScriptName() {
     return 'add-reddit-posts'
   }
 
-  if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 10000) {
+  if (add_twitter_statuses_started_at === null || Date.now() - add_twitter_statuses_started_at > 10000) {
     const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
     if (time_since_limited_at === null || time_since_limited_at > 900000) {
+      add_twitter_statuses_started_at = Date.now()
       return 'add-twitter-statuses'
     }
   }
