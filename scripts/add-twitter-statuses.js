@@ -25,10 +25,7 @@ connection.query(`
   `, url_ids).then(() => {
     const fetchAndUpdates = url_pojos.map((url_pojo) => {
       return function fetchAndUpdate() {
-        console.log(url_pojo.id)
-        console.log(url_pojo.last_twitter_status_id)
         return getTwitterStatuses(`url:${url_pojo.url}`, url_pojo.last_twitter_status_id).then((statuses) => {
-          console.log(statuses.length)
 
           const insert_users_q_groups = getQGroups(statuses.length, 3)
           const insert_statuses_q_groups = getQGroups(statuses.length, 4)
