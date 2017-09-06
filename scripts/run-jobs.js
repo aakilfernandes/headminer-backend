@@ -65,8 +65,10 @@ function getNextScriptName() {
   }
 
   if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 10000) {
-    add_twitter_influencers_started_at = Date.now()
-    return 'add-twitter-statuses'
+    const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
+    if (time_since_limited_at === null || time_since_limited_at > 900000) {
+      return 'add-twitter-statuses'
+    }
   }
 
   if (twitter_influencify_url_started_at === null || Date.now() - twitter_influencify_url_started_at > 30000) {
@@ -105,13 +107,6 @@ function getNextScriptName() {
 
   if (random < .6) {
     return 'add-reddit-post-snapshots'
-  }
-
-  if (random < .7) {
-    const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
-    if (time_since_limited_at === null || time_since_limited_at > 900000) {
-      return 'add-twitter-statuses'
-    }
   }
 
   if (random < .8) {
