@@ -66,7 +66,7 @@ function getNextScriptName() {
 
   if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 10000) {
     add_twitter_influencers_started_at = Date.now()
-    return 'add-twitter-influencers'
+    return 'add-twitter-statuses'
   }
 
   if (twitter_influencify_url_started_at === null || Date.now() - twitter_influencify_url_started_at > 30000) {
@@ -82,6 +82,11 @@ function getNextScriptName() {
   if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 60000) {
     heatify_articles_started_at = Date.now()
     return 'heatify-articles'
+  }
+
+  if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 3600000) {
+    add_twitter_influencers_started_at = Date.now()
+    return 'add-twitter-influencers'
   }
 
   if (add_facebook_snapshots_started_at === null || Date.now() - add_facebook_snapshots_started_at > 60000) {

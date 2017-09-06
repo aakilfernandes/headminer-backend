@@ -55,8 +55,17 @@ server.get('/hot/', function (req, res, next) {
       return article.id
     })
     res.send(ids)
+    next()
   })
 })
+
+server.get('/jobs/', function (req, res, next) {
+  connection.query('SELECT * FROM jobs ORDER BY id DESC LIMIT 1000', []).then((jobs) => {
+    res.send(jobs)
+    next()
+  })
+})
+
 
 server.listen(4001, function () {
   console.log('%s listening at %s', server.name, server.url);
