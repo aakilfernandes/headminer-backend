@@ -6,12 +6,12 @@ const queries = []
 const values = []
 
 connection.query(`
-  SELECT * FROM articles ORDER BY influencified_at ASC, id ASC LIMIT 10;
+  SELECT * FROM articles ORDER BY twitter_influencified_at ASC, id ASC LIMIT 10;
 `).then((articles) => {
   const article_ids = _.map(articles, 'id')
   const article_ids_qs = getQs(article_ids.length)
   return connection.query(`
-    UPDATE articles SET influencified_at = NOW() WHERE id IN (${article_ids_qs});
+    UPDATE articles SET twitter_influencified_at = NOW() WHERE id IN (${article_ids_qs});
     SELECT twitter_urls_influences.*, article_id FROM twitter_urls_influences, urls
     WHERE twitter_urls_influences.url_id = urls.id
       AND urls.article_id IN (${article_ids_qs});

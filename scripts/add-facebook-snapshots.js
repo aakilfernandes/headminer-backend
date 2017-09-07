@@ -6,7 +6,7 @@ const urljs = require('url')
 const _ = require('lodash')
 const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
-const updateFacebookLimitedAt = require('../lib/updateFacebookLimitedAt')
+const updateApiLimitedAt = require('../lib/updateApiLimitedAt')
 const fs = require('fs')
 const getSecret = require('../lib/getSecret')
 
@@ -39,8 +39,9 @@ function fetchAndPush(url_pojo, queries, values) {
     if (error && error.statusCode === 403) {
       proxy_index += 1
       if (proxy_index >= proxies.length) {
-        updateFacebookLimitedAt()
-        throw error
+        return updateApiLimitedAt('facebook').then(() => {
+          throw error
+        })
       }
       return fetchAndPush(url_pojo, queries, values)
     }

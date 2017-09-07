@@ -1,18 +1,13 @@
 const Jobbit = require('jobbit')
 const _ = require('lodash')
 const connection = require('../lib/connection')
-const fs = require('fs')
-const getTimeSinceTwitterSearchLimitedAt = require('../lib/getTimeSinceTwitterSearchLimitedAt')
-const getTimeSinceTwitterFriendIdsLimitedAt = require('../lib/getTimeSinceTwitterFriendIdsLimitedAt')
-const getTimeSinceFacebookLimitedAt = require('../lib/getTimeSinceFacebookLimitedAt')
+const fs = require('../lib/fs')
+const getProcessingPriorities = require('../lib/getProcessingPriorities')
+const Promise = require('bluebird')
+const getRandomWeightedChoice = require('random-weighted-choice')
+const getApiAvailability = require('../lib/getApiAvailability')
 
 let add_reddit_posts_started_at = null
-let add_twitter_influencers_started_at = null
-let twitter_influencify_url_started_at = null
-let heatify_articles_started_at = null
-let add_facebook_snapshots_started_at = null
-let twitter_influencify_articles_started_at = null
-let add_twitter_statuses_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -27,32 +22,32 @@ function runJobbitThread() {
 }
 
 function getNextJobbit() {
+  return getNextScriptName().then((script_name) => {
+    console.log(script_name)
+    return connection.query('INSERT INTO jobs(created_at, name) VALUES(?, ?)', [
+      new Date(), script_name
+    ]).then((results) => {
+      const job_id = results.insertId
+      const command = getCommand(script_name)
+      const jobbit = new Jobbit(command)
 
-  const script_name = getNextScriptName()
-  console.log(script_name)
-  return connection.query('INSERT INTO jobs(created_at, name) VALUES(?, ?)', [
-    new Date(), script_name
-  ]).then((results) => {
-    const job_id = results.insertId
-    const command = getCommand(script_name)
-    const jobbit = new Jobbit(command)
-
-    return jobbit.promise.then((completion) => {
-      return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
-        new Date(),
-        completion.stdout || null,
-        (completion.error || completion.stderr) ? true : false,
-        completion.stderr || completion.error || null,
-        job_id
-      ])
-    }, (error) => {
-      return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
-        new Date(),
-        completion.stdout || null,
-        true,
-        error,
-        job_id
-      ])
+      return jobbit.promise.then((completion) => {
+        return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
+          new Date(),
+          completion.stdout || null,
+          (completion.error || completion.stderr) ? true : false,
+          completion.stderr || completion.error || null,
+          job_id
+        ])
+      }, (error) => {
+        return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
+          new Date(),
+          completion.stdout || null,
+          true,
+          error,
+          job_id
+        ])
+      })
     })
   }).catch((error) => {
     console.error(error)
@@ -60,65 +55,38 @@ function getNextJobbit() {
 }
 
 function getNextScriptName() {
-  if (add_reddit_posts_started_at === null || Date.now() - add_reddit_posts_started_at > 30000) {
-    add_reddit_posts_started_at = Date.now()
-    return 'add-reddit-posts'
-  }
-
-  if (add_twitter_statuses_started_at === null || Date.now() - add_twitter_statuses_started_at > 10000) {
-    const time_since_limited_at = getTimeSinceTwitterSearchLimitedAt()
-    if (time_since_limited_at === null || time_since_limited_at > 900000) {
-      add_twitter_statuses_started_at = Date.now()
-      return 'add-twitter-statuses'
+  return Promise.resolve().then(() => {
+    if (add_reddit_posts_started_at === null || Date.now() - add_reddit_posts_started_at > 60000) {
+      add_reddit_posts_started_at = Date.now()
+      return 'add-reddit-posts'
     }
-  }
+    return getProcessingPriorities().then((priorities) => {
+      const weightedChoices = _.map(priorities, (weight, id) => {
+        return { weight, id}
+      })
+      const script_name = getRandomWeightedChoice(weightedChoices)
+      return checkApiAvailabilityOrGetNextScriptName(script_name)
+    })
+  })
+}
 
-  if (twitter_influencify_url_started_at === null || Date.now() - twitter_influencify_url_started_at > 30000) {
-    twitter_influencify_url_started_at = Date.now()
-    return 'twitter-influencify-url'
-  }
-
-  if (twitter_influencify_articles_started_at === null || Date.now() - twitter_influencify_articles_started_at > 300000) {
-    twitter_influencify_articles_started_at = Date.now()
-    return 'twitter-influencify-articles'
-  }
-
-  if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 60000) {
-    heatify_articles_started_at = Date.now()
-    return 'heatify-articles'
-  }
-
-  if (add_twitter_influencers_started_at === null || Date.now() - add_twitter_influencers_started_at > 3600000) {
-    add_twitter_influencers_started_at = Date.now()
-    return 'add-twitter-influencers'
-  }
-
-  if (add_facebook_snapshots_started_at === null || Date.now() - add_facebook_snapshots_started_at > 60000) {
-    const time_since_limited_at = getTimeSinceFacebookLimitedAt()
-    if (time_since_limited_at === null || time_since_limited_at > 600000) {
-      add_facebook_snapshots_started_at = Date.now()
-      return 'add-facebook-snapshots'
+function checkApiAvailabilityOrGetNextScriptName(script_name) {
+  return Promise.resolve().then(() => {
+    switch(script_name) {
+      case 'add-facebook-snapshots':
+        return getApiAvailability('facebook').then((is_available) => {
+          return is_available ? script_name : getNextScriptName()
+        })
+      case 'add-twitter-statuses':
+        return getApiAvailability('twitter-search').then((is_available) => {
+          return is_available ? script_name : getNextScriptName()
+        })
+      case 'add-twitter-friends':
+        return getApiAvailability('twitter-friend-ids').then((is_available) => {
+          return is_available ? script_name : getNextScriptName()
+        })
+      default:
+        return script_name
     }
-  }
-
-  const random = Math.random()
-
-  if (random < .4) {
-    return 'coallesce-article'
-  }
-
-  if (random < .6) {
-    return 'add-reddit-post-snapshots'
-  }
-
-  if (random < .8) {
-    const time_since_limited_at = getTimeSinceTwitterFriendIdsLimitedAt()
-    if (time_since_limited_at === null || time_since_limited_at > 900000) {
-      return 'add-twitter-friends'
-    }
-  }
-
-
-  return 'scrape-url'
-
+  })
 }

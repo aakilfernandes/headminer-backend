@@ -3,7 +3,7 @@ const connection = require('../lib/connection')
 const getQGroups = require('../lib/getQGroups')
 const getQs = require('../lib/getQs')
 const fs = require('fs')
-const updateTwitterSearchLimitedAt = require('../lib/updateTwitterSearchLimitedAt')
+const updateApiLimitedAt = require('../lib/updateApiLimitedAt')
 const _ = require('lodash')
 const waterfall = require('promise-waterfall')
 
@@ -93,7 +93,9 @@ connection.query(`
 
 }).catch((error) => {
   if (error[0] && error[0].code === 88) {
-    updateTwitterSearchLimitedAt()
+    return updateApiLimitedAt('twitter-search').then(() => {
+      throw error
+    })
   }
   throw error
 }).finally(() => {
