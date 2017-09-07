@@ -19,6 +19,7 @@ return getSecret('proxies').then((_proxies) => {
     SELECT urls.* FROM urls, domains
     WHERE urls.domain_id = domains.id
       AND domains.is_ignored = 0
+      AND urls.created_at > NOW() - INTERVAL 48 HOUR
     ORDER BY facebook_snapshot_added_at ASC, id ASC LIMIT 100;
   `).then((url_pojos) => {
     const url_ids = _.map(url_pojos, 'id')

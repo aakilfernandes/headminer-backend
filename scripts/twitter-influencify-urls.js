@@ -16,6 +16,7 @@ mysqlQuery(
     WHERE urls.domain_id = domains.id
       AND domains.is_ignored = 0
       AND urls.twitter_statuses_count > 100
+      AND urls.created_at > NOW() - INTERVAL 48 HOUR
     ORDER BY twitter_influencified_at ASC
     LIMIT 100;
   `).then((url_pojos) => {

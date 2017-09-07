@@ -16,6 +16,7 @@ return mysqlQuery(`
         domains.id = urls.domain_id
         AND domains.is_ignored = FALSE
         AND urls.article_id IS NULL
+        AND urls.created_at > NOW() - INTERVAL 48 HOUR
       ORDER BY scraped_at ASC
       LIMIT 1
   );

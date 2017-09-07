@@ -12,6 +12,7 @@ return mysqlQuery(`
     WHERE reddit_posts.url_id = urls.id
       AND urls.domain_id = domains.id
       AND domains.is_ignored = 0
+      AND reddit_posts.created_at > NOW() - INTERVAL 48 HOUR
     ORDER BY snapshot_added_at ASC LIMIT 10;
 `).then((posts) => {
 

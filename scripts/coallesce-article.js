@@ -9,7 +9,8 @@ mysqlQuery((`
   SET @article_id := (
     SELECT articles.id FROM articles, urls
       WHERE urls.id = urls.canonical_url_id
-      AND urls.article_id = articles.id
+        AND urls.article_id = articles.id
+        AND articles.created_at > NOW() - INTERVAL 48 HOUR
       ORDER BY articles.coallesced_at ASC, articles.id ASC
       LIMIT 1
   );

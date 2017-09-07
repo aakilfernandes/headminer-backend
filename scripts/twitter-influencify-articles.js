@@ -6,7 +6,10 @@ const queries = []
 const values = []
 
 mysqlQuery(`
-  SELECT * FROM articles ORDER BY twitter_influencified_at ASC, id ASC LIMIT 10;
+  SELECT * FROM articles
+  WHERE created_at > NOW() - 48 HOURS
+  ORDER BY twitter_influencified_at ASC, id ASC
+  LIMIT 10;
 `).then((articles) => {
   const article_ids = _.map(articles, 'id')
   const article_ids_qs = getQs(article_ids.length)
