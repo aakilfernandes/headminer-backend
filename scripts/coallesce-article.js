@@ -1,10 +1,10 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const _ = require('lodash')
 const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
 
 
-connection.query((`
+mysqlQuery((`
   START TRANSACTION;
   SET @article_id := (
     SELECT articles.id FROM articles, urls
@@ -20,7 +20,7 @@ connection.query((`
   const articles = results[3]
   const article = articles[0]
   console.log(article.id)
-  return connection.query(`
+  return mysqlQuery(`
     SELECT publishers.* FROM publishers, domains, urls
     WHERE
       urls.article_id = ?
@@ -34,14 +34,14 @@ connection.query((`
       return
     }
     const publisher = publishers[0]
-    return connection.query(`
+    return mysqlQuery(`
       SELECT * FROM domains WHERE publisher_id = ?
     `, [publisher.id]).then((domains) => {
       const domain_ids = domains.map((domain) => {
         return domain.id
       })
       const domain_ids_qs = getQs(domain_ids.length)
-      return connection.query(`
+      return mysqlQuery(`
         SELECT articles.* FROM articles
           LEFT JOIN urls ON (urls.article_id = articles.id)
           LEFT JOIN domains ON (urls.domain_id = domains.id)
@@ -60,13 +60,13 @@ connection.query((`
         return duplicate_article.id
       })
       const duplicate_article_ids_qs = getQs(duplicate_article_ids.length)
-      return connection.query(`
+      return mysqlQuery(`
         DELETE FROM articles WHERE id IN (${duplicate_article_ids_qs});
         UPDATE urls SET article_id = ? WHERE article_id IN (${duplicate_article_ids_qs})
       `, duplicate_article_ids.concat([article.id]).concat(duplicate_article_ids)
       )
     }).then(() => {
-      return connection.query(
+      return mysqlQuery(
         'SELECT * FROM urls WHERE article_id = ?', [article.id]
       ).then((url_pojos) => {
 
@@ -91,7 +91,7 @@ connection.query((`
           return url.id
         })
         const url_ids_qs = getQs(url_ids.length)
-        return connection.query(`
+        return mysqlQuery(`
           SELECT * FROM reddit_posts WHERE url_id IN (${url_ids_qs});
           SELECT count(id) FROM twitter_statuses_urls WHERE url_id IN (${url_ids_qs});
           `, url_ids.concat(url_ids)
@@ -113,7 +113,7 @@ connection.query((`
           console.log(facebook_share_count)
           console.log(facebook_comment_count)
 
-          return connection.query(`
+          return mysqlQuery(`
             INSERT INTO article_snapshots(
                 article_id,
                 reddit_posts_count,
@@ -149,5 +149,5 @@ connection.query((`
     })
   })
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

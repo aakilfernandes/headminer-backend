@@ -1,5 +1,5 @@
 const request = require('request-promise')
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const getRedditPosts = require('../lib/getRedditPosts')
 const getQGroups = require('../lib/getQGroups')
 const urljs = require('url')
@@ -7,7 +7,7 @@ const waterfall = require('promise-waterfall')
 const _ = require('lodash')
 const getQs = require('../lib/getQs')
 
-return connection.query(`
+return mysqlQuery(`
   SELECT reddit_posts.* FROM reddit_posts, urls, domains
     WHERE reddit_posts.url_id = urls.id
       AND urls.domain_id = domains.id
@@ -18,7 +18,7 @@ return connection.query(`
   const post_ids = _.map(posts, 'id')
   const post_ids_qs = getQs(post_ids.length)
 
-  return connection.query(`
+  return mysqlQuery(`
     UPDATE reddit_posts SET snapshot_added_at = NOW() WHERE id IN (${post_ids_qs})
   `, post_ids).then(() => {
 
@@ -59,11 +59,11 @@ return connection.query(`
 
       const query = queries.join('\r\n')
 
-      return connection.query(query, values)
+      return mysqlQuery(query, values)
     })
 
   })
 
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

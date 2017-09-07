@@ -1,6 +1,6 @@
 const Jobbit = require('jobbit')
 const _ = require('lodash')
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const fs = require('../lib/fs')
 const getProcessingPriorities = require('../lib/getProcessingPriorities')
 const Promise = require('bluebird')
@@ -25,7 +25,7 @@ function runJobbitThread() {
 function getNextJobbit() {
   return getNextScriptName().then((script_name) => {
     console.log(script_name)
-    return connection.query('INSERT INTO jobs(created_at, name) VALUES(?, ?)', [
+    return mysqlQuery('INSERT INTO jobs(created_at, name) VALUES(?, ?)', [
       new Date(), script_name
     ]).then((results) => {
       const job_id = results.insertId
@@ -33,7 +33,7 @@ function getNextJobbit() {
       const jobbit = new Jobbit(command)
 
       return jobbit.promise.then((completion) => {
-        return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
+        return mysqlQuery('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
           new Date(),
           completion.stdout || null,
           (completion.error || completion.stderr) ? true : false,
@@ -41,7 +41,7 @@ function getNextJobbit() {
           job_id
         ])
       }, (error) => {
-        return connection.query('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
+        return mysqlQuery('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
           new Date(),
           completion.stdout || null,
           true,

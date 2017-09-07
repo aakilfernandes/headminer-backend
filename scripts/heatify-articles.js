@@ -1,9 +1,9 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const getQs = require('../lib/getQs')
 
 const period_ms = 1000 * 60 * 60 * 4
 
-return connection.query(`
+return mysqlQuery(`
   SELECT * FROM articles
   WHERE twitter_statuses_count IS NOT NULL
     AND facebook_share_count IS NOT NULL
@@ -47,7 +47,7 @@ return connection.query(`
 
   const query = queries.join('\r\n')
 
-  return connection.query(query, values)
+  return mysqlQuery(query, values)
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

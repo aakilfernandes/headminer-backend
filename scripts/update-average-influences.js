@@ -1,10 +1,10 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const _ = require('lodash')
 const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
 const stats = require('stats-lite')
 
-connection.query(`
+mysqlQuery(`
   SELECT * FROM twitter_influencers WHERE is_ignored = 0;
 `).then((influencers) => {
 
@@ -13,7 +13,7 @@ connection.query(`
 
   const getQueriesAndValues = influencers.map((influencer) => {
     return function getQueriesAndValues() {
-      return connection.query(`
+      return mysqlQuery(`
         SELECT articles.*, twitter_articles_influences.influence  FROM twitter_articles_influences, articles
         WHERE twitter_articles_influences.influencer_id = ?
           AND twitter_articles_influences.article_id = articles.id
@@ -67,8 +67,8 @@ connection.query(`
   })
   return waterfall(getQueriesAndValues).then(() => {
     const query = queries.join('\r\n')
-    return connection.query(query, values)
+    return mysqlQuery(query, values)
   })
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

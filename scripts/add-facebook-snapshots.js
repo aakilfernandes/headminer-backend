@@ -1,5 +1,5 @@
 const request = require('request-promise')
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const getRedditPosts = require('../lib/getRedditPosts')
 const getQGroups = require('../lib/getQGroups')
 const urljs = require('url')
@@ -10,8 +10,48 @@ const updateApiLimitedAt = require('../lib/updateApiLimitedAt')
 const fs = require('fs')
 const getSecret = require('../lib/getSecret')
 
-const proxies = _.shuffle(getSecret('proxies').split('\n'))
+let proxies =
 let proxy_index = 0
+
+return getSecret('proxies').then((_proxies) => {
+  proxies = _.shuffle(_proxies.split('\n'))
+  return mysqlQuery(`
+    SELECT urls.* FROM urls, domains
+    WHERE urls.domain_id = domains.id
+      AND domains.is_ignored = 0
+    ORDER BY facebook_snapshot_added_at ASC, id ASC LIMIT 100;
+  `).then((url_pojos) => {
+    const url_ids = _.map(url_pojos, 'id')
+    const url_ids_qs = getQs(url_ids.length)
+    return mysqlQuery(`
+      UPDATE urls SET facebook_snapshot_added_at = NOW() WHERE id IN (${url_ids_qs})
+    `, url_ids).then(() => {
+      const queries = []
+      const values = []
+
+      const wrappedFetchAndPushes = url_pojos.map((url_pojo) => {
+        return () => {
+          return fetchAndPush(url_pojo, queries, values)
+        }
+      })
+
+      return waterfall(wrappedFetchAndPushes).then(() => {
+        const query = queries.join('\r\n')
+        return mysqlQuery(query, values)
+      }, (error) => {
+        if (error && error.statusCode === 403) {
+          const query = queries.join('\r\n')
+          return mysqlQuery(query, values).then(() => {
+            throw error
+          })
+        }
+        throw error
+      })
+    })
+  }).finally(() => {
+    process.exit()
+  })
+})
 
 function fetchAndPush(url_pojo, queries, values) {
   const proxy = proxies[proxy_index]
@@ -48,40 +88,3 @@ function fetchAndPush(url_pojo, queries, values) {
     throw error
   })
 }
-
-return connection.query(`
-  SELECT urls.* FROM urls, domains
-  WHERE urls.domain_id = domains.id
-    AND domains.is_ignored = 0
-  ORDER BY facebook_snapshot_added_at ASC, id ASC LIMIT 100;
-`).then((url_pojos) => {
-  const url_ids = _.map(url_pojos, 'id')
-  const url_ids_qs = getQs(url_ids.length)
-  return connection.query(`
-    UPDATE urls SET facebook_snapshot_added_at = NOW() WHERE id IN (${url_ids_qs})
-  `, url_ids).then(() => {
-    const queries = []
-    const values = []
-
-    const wrappedFetchAndPushes = url_pojos.map((url_pojo) => {
-      return () => {
-        return fetchAndPush(url_pojo, queries, values)
-      }
-    })
-
-    return waterfall(wrappedFetchAndPushes).then(() => {
-      const query = queries.join('\r\n')
-      return connection.query(query, values)
-    }, (error) => {
-      if (error && error.statusCode === 403) {
-        const query = queries.join('\r\n')
-        return connection.query(query, values).then(() => {
-          throw error
-        })
-      }
-      throw error
-    })
-  })
-}).finally(() => {
-  connection.end()
-})

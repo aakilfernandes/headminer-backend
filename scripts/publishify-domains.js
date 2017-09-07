@@ -1,4 +1,4 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const request = require('request-promise')
 const parseHtml = require('../lib/parseHtml')
 const colors = require('colors')
@@ -11,7 +11,7 @@ const ask = Promise.promisify(prompt.get)
 prompt.start()
 
 function next() {
-  return connection.query(`
+  return mysqlQuery(`
     SELECT * FROM domains
     WHERE is_ignored = 0 AND publisher_id IS NULL
     ORDER BY reddit_posts_count DESC
@@ -21,7 +21,7 @@ function next() {
     const domain_pojo = domain_pojos[0]
     return getName(domain_pojo).then((name) => {
       console.log('name', name)
-      return connection.query(`
+      return mysqlQuery(`
         INSERT IGNORE INTO publishers(name) VALUES (?);
         UPDATE domains SET publisher_id = (SELECT id FROM publishers WHERE name = ? LIMIT 1) WHERE id = ?
       `, [name, name, domain_pojo.id])

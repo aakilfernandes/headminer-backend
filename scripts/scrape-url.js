@@ -1,4 +1,4 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const request = require('request-promise')
 const parseHtml = require('../lib/parseHtml')
 const _ = require('lodash')
@@ -8,7 +8,7 @@ const JSDOM = require('jsdom').JSDOM
 
 let hostname_pojos
 
-return connection.query(`
+return mysqlQuery(`
   START TRANSACTION;
   SET @url_id := (
     SELECT urls.id FROM domains, urls
@@ -62,7 +62,7 @@ return connection.query(`
     let article_promise
 
     if (url_pojo.article_id === null) {
-      article_promise = connection.query(`
+      article_promise = mysqlQuery(`
         INSERT INTO articles(title, author, description, image) VALUES (?, ?, ?, ?);
       `, [
         title,
@@ -71,7 +71,7 @@ return connection.query(`
         image
       ])
     } else {
-      article_promise = connection.query(`
+      article_promise = mysqlQuery(`
         UPDATE articles SET title = ?, author = ?, description = ?, image = ? where id = ?
       `, [
         title,
@@ -85,7 +85,7 @@ return connection.query(`
     return article_promise.then((results) => {
       const article_id = url_pojo.article_id ? url_pojo.article_id : results.insertId
       console.log(article_id)
-      return connection.query(`
+      return mysqlQuery(`
         START TRANSACTION;
         INSERT IGNORE INTO domains(domain) VALUE (?);
         INSERT IGNORE INTO urls(domain_id, url) VALUE ((SELECT id FROM domains WHERE domains.domain = ?), ?);
@@ -105,5 +105,5 @@ return connection.query(`
     })
   })
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

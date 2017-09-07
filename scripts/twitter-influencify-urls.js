@@ -1,17 +1,17 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const _ = require('lodash')
 const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
 
 const user_sample_size = 1000
 
-connection.query(
+mysqlQuery(
   `SELECT * FROM twitter_influencers WHERE is_ignored = 0 ORDER BY id`
 ).then((influencers) => {
   if (influencers.length === 0) {
     return
   }
-  return connection.query(`
+  return mysqlQuery(`
     SELECT urls.* FROM urls, domains
     WHERE urls.domain_id = domains.id
       AND domains.is_ignored = 0
@@ -23,13 +23,13 @@ connection.query(
     const url_ids = _.map(url_pojos, 'id')
     const url_ids_qs = getQs(url_ids.length)
 
-    return connection.query(`
+    return mysqlQuery(`
       UPDATE urls SET twitter_influencified_at = NOW() WHERE id IN (${url_ids_qs})
     `, url_ids).then(() => {
       const influencifies = url_pojos.map((url_pojo) => {
         const multiplier = Math.max(1, url_pojo.twitter_statuses_count / user_sample_size)
         return function influencify() {
-          return connection.query(
+          return mysqlQuery(
             `SELECT twitter_users.*
             FROM twitter_users, twitter_statuses, twitter_statuses_urls
             WHERE twitter_statuses_urls.url_id = ?
@@ -66,7 +66,7 @@ connection.query(
               )
             })
             const query = queries.join('\r\n')
-            return connection.query(query, values)
+            return mysqlQuery(query, values)
           })
         }
       })
@@ -77,5 +77,5 @@ connection.query(
 
   })
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

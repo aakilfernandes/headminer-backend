@@ -1,4 +1,4 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const request = require('request-promise')
 const parseHtml = require('../lib/parseHtml')
 const colors = require('colors')
@@ -11,14 +11,14 @@ const ask = Promise.promisify(prompt.get)
 prompt.start()
 
 function next() {
-  return connection.query('SELECT * FROM domains ORDER BY ignorified_at ASC, reddit_posts_count DESC LIMIT 1').then((domain_pojos) => {
+  return mysqlQuery('SELECT * FROM domains ORDER BY ignorified_at ASC, reddit_posts_count DESC LIMIT 1').then((domain_pojos) => {
     const domain_pojo = domain_pojos[0]
     return getIsIgnored(domain_pojo).then((is_ignored) => {
-      return connection.query('UPDATE domains SET ignorified_at = NOW(), is_ignored = ? WHERE id = ?', [
+      return mysqlQuery('UPDATE domains SET ignorified_at = NOW(), is_ignored = ? WHERE id = ?', [
         is_ignored, domain_pojo.id
       ])
     }, () => {
-      return connection.query('UPDATE domains SET ignorified_at = NOW() WHERE id = ?', [
+      return mysqlQuery('UPDATE domains SET ignorified_at = NOW() WHERE id = ?', [
         domain_pojo.id
       ])
     }).finally(() => {

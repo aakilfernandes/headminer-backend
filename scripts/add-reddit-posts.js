@@ -1,10 +1,10 @@
 const request = require('request-promise')
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const getRedditPosts = require('../lib/getRedditPosts')
 const getQGroups = require('../lib/getQGroups')
 const urljs = require('url')
 
-return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC limit 1').then((posts) => {
+return mysqlQuery('SELECT id FROM reddit_posts ORDER BY created_at DESC limit 1').then((posts) => {
   const before = posts.length > 0 ? posts[0].id : 0
   return getRedditPosts(before)
 }).then((_posts) => {
@@ -45,7 +45,6 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
       1,
       domain
     )
-    console.log(post.id)
     insert_posts_values.push(
       post.id,
       new Date(post.created_utc * 1000),
@@ -63,7 +62,7 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
   ).concat(
     insert_posts_values
   )
-  return connection.query(`
+  return mysqlQuery(`
     INSERT IGNORE INTO domains(domain, reddit_posts_count) VALUES ${insert_domains_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
     INSERT IGNORE INTO reddit_subreddits(id, name, reddit_posts_count) VALUES ${insert_subreddits_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
     INSERT IGNORE INTO urls(url, reddit_posts_count, domain_id) VALUES ${insert_urls_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
@@ -71,8 +70,6 @@ return connection.query('SELECT id FROM reddit_posts ORDER BY created_at DESC li
     `,
     all_insert_values
   )
-}).then(() => {
-
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

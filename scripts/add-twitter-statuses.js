@@ -1,5 +1,5 @@
 const getTwitterStatuses = require('../lib/getTwitterStatuses')
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const getQGroups = require('../lib/getQGroups')
 const getQs = require('../lib/getQs')
 const fs = require('fs')
@@ -7,7 +7,7 @@ const updateApiLimitedAt = require('../lib/updateApiLimitedAt')
 const _ = require('lodash')
 const waterfall = require('promise-waterfall')
 
-connection.query(`
+mysqlQuery(`
   SELECT urls.* FROM urls, domains
   WHERE urls.created_at >= NOW() - INTERVAL 2 DAY
     AND urls.domain_id = domains.id
@@ -20,7 +20,7 @@ connection.query(`
   const url_ids = _.map(url_pojos, 'id')
   const url_ids_qs = getQs(url_ids.length)
 
-  return connection.query(`
+  return mysqlQuery(`
     UPDATE urls SET twitter_statuses_added_at = NOW() WHERE id IN (${url_ids_qs})
   `, url_ids).then(() => {
     const fetchAndUpdates = url_pojos.map((url_pojo) => {
@@ -78,7 +78,7 @@ connection.query(`
             VALUES ${insert_statuses_urls_q_groups};
             `
 
-          return connection.query(`
+          return mysqlQuery(`
             UPDATE urls SET twitter_statuses_count = ?, last_twitter_status_id = ? WHERE id = ?;
             ${inserts_query}
             `,
@@ -99,5 +99,5 @@ connection.query(`
   }
   throw error
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

@@ -1,5 +1,5 @@
 const restify = require('restify')
-const connection = require('./lib/connection')
+const mysqlQuery = require('./lib/mysqlQuery')
 const _ = require('lodash')
 
 const server = restify.createServer({
@@ -17,19 +17,19 @@ server.use(function crossOrigin(req,res,next){
 })
 
 server.get('/articles/:id', function (req, res, next) {
-  connection.query('SELECT * FROM articles WHERE id = ?', [req.params.id]).then((articles) => {
+  mysqlQuery('SELECT * FROM articles WHERE id = ?', [req.params.id]).then((articles) => {
     const article = articles[0]
-    return connection.query('SELECT * FROM urls WHERE article_id = ?', [article.id]).then((urls) => {
+    return mysqlQuery('SELECT * FROM urls WHERE article_id = ?', [article.id]).then((urls) => {
       article.urls = urls
       article.url = _.find(urls, (url) => {
         return url.id === url.canonical_url_id
       })
-      return connection.query('SELECT * FROM domains WHERE id = ?', [article.url.domain_id]).then((domains) => {
+      return mysqlQuery('SELECT * FROM domains WHERE id = ?', [article.url.domain_id]).then((domains) => {
         const domain = domains[0]
         article.url.domain = domain
       })
     }).then(() => {
-      return connection.query(`
+      return mysqlQuery(`
         SELECT
           twitter_influencers.*,
           twitter_articles_influences.influence,
@@ -50,7 +50,7 @@ server.get('/articles/:id', function (req, res, next) {
 })
 
 server.get('/hot/', function (req, res, next) {
-  connection.query('SELECT id FROM articles ORDER BY heat DESC LIMIT 10', []).then((articles) => {
+  mysqlQuery('SELECT id FROM articles ORDER BY heat DESC LIMIT 10', []).then((articles) => {
     const ids = articles.map((article) => {
       return article.id
     })
@@ -60,7 +60,7 @@ server.get('/hot/', function (req, res, next) {
 })
 
 server.get('/jobs/', function (req, res, next) {
-  connection.query('SELECT * FROM jobs ORDER BY id DESC LIMIT 1000', []).then((jobs) => {
+  mysqlQuery('SELECT * FROM jobs ORDER BY id DESC LIMIT 1000', []).then((jobs) => {
     res.send(jobs)
     next()
   })

@@ -1,16 +1,16 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const getQs = require('../lib/getQs')
 const _ = require('lodash')
 
 const queries = []
 const values = []
 
-connection.query(`
+mysqlQuery(`
   SELECT * FROM articles ORDER BY twitter_influencified_at ASC, id ASC LIMIT 10;
 `).then((articles) => {
   const article_ids = _.map(articles, 'id')
   const article_ids_qs = getQs(article_ids.length)
-  return connection.query(`
+  return mysqlQuery(`
     UPDATE articles SET twitter_influencified_at = NOW() WHERE id IN (${article_ids_qs});
     SELECT twitter_urls_influences.*, article_id FROM twitter_urls_influences, urls
     WHERE twitter_urls_influences.url_id = urls.id
@@ -63,8 +63,8 @@ connection.query(`
     values.push(...article_ids)
 
     const query = queries.join('\r\n')
-    return connection.query(query, values)
+    return mysqlQuery(query, values)
   })
 }).finally(() => {
-  connection.end()
+  process.exit()
 })

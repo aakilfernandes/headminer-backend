@@ -1,10 +1,10 @@
-const connection = require('../lib/connection')
+const mysqlQuery = require('../lib/mysqlQuery')
 const fs = require('../lib/fs')
 
 const period_query = 'created_at > NOW() - INTERVAL 48 HOUR'
 const period_seconds = 60 * 60 * 48
 
-connection.query(`
+mysqlQuery(`
   SELECT count(id) as count FROM urls WHERE twitter_statuses_added_at IS NULL AND ${period_query};
   SELECT count(id) as count FROM urls WHERE twitter_statuses_added_at IS NOT NULL AND ${period_query};
   SELECT AVG(TIMESTAMPDIFF(SECOND, twitter_statuses_added_at, NOW())) as average_age
@@ -111,13 +111,14 @@ connection.query(`
       AND friends_count <= 200
       AND ${period_query};
 `).then((results) => {
+  console.log(results)
   const processing_priorities = {
     'add-twitter-statuses': getAverageAge(
       results[0][0].count,
       results[1][0].count,
       results[2][0].average_age
     ),
-    'add-facebook-snapshot': getAverageAge(
+    'add-facebook-snapshots': getAverageAge(
       results[3][0].count,
       results[4][0].count,
       results[5][0].average_age
@@ -137,7 +138,7 @@ connection.query(`
       results[13][0].count,
       results[14][0].average_age
     ),
-    'twitter-influencify-url': getAverageAge(
+    'twitter-influencify-urls': getAverageAge(
       results[15][0].count,
       results[16][0].count,
       results[17][0].average_age
@@ -153,12 +154,13 @@ connection.query(`
       results[23][0].average_age
     )
   }
-  return fs.writeFile(
+  console.log(processing_priorities)
+  return fs.writeFileAsync(
     `${__dirname}/../workspace/processing_priorities.json`,
     JSON.stringify(processing_priorities, null, 2)
   )
 }).finally(() => {
-  connection.end()
+  process.exit()
 })
 
 function getAverageAge(null_count, not_null_count, not_null_average) {
