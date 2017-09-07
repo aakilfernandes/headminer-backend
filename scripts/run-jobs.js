@@ -7,6 +7,7 @@ const Promise = require('bluebird')
 const getRandomWeightedChoice = require('random-weighted-choice')
 const getApiAvailability = require('../lib/getApiAvailability')
 
+let update_processing_priorities_started_at = null
 let add_reddit_posts_started_at = null
 
 _.range(4).map(() => {
@@ -56,10 +57,17 @@ function getNextJobbit() {
 
 function getNextScriptName() {
   return Promise.resolve().then(() => {
+
+    if (update_processing_priorities_started_at === null || Date.now() - update_processing_priorities_started_at > 60000) {
+      update_processing_priorities_started_at = Date.now()
+      return 'update-processing-priorities'
+    }
+
     if (add_reddit_posts_started_at === null || Date.now() - add_reddit_posts_started_at > 60000) {
       add_reddit_posts_started_at = Date.now()
       return 'add-reddit-posts'
     }
+
     return getProcessingPriorities().then((priorities) => {
       const weightedChoices = _.map(priorities, (weight, id) => {
         return { weight, id}
