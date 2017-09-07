@@ -111,7 +111,6 @@ mysqlQuery(`
       AND friends_count <= 200
       AND ${period_query};
 `).then((results) => {
-  console.log(results)
   const processing_priorities = {
     'add-twitter-statuses': getAverageAge(
       results[0][0].count,
@@ -154,7 +153,6 @@ mysqlQuery(`
       results[23][0].average_age
     )
   }
-  console.log(processing_priorities)
   return fs.writeFileAsync(
     `${__dirname}/../workspace/processing_priorities.json`,
     JSON.stringify(processing_priorities, null, 2)
