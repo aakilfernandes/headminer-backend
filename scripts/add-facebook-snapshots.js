@@ -1,5 +1,6 @@
 const request = require('request-promise')
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const getRedditPosts = require('../lib/getRedditPosts')
 const getQGroups = require('../lib/getQGroups')
 const urljs = require('url')
@@ -50,7 +51,7 @@ return getSecret('proxies').then((_proxies) => {
       })
     })
   }).finally(() => {
-    process.exit()
+    return mysqlDisconnect()
   })
 })
 

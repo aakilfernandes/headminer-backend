@@ -1,5 +1,6 @@
 const twitterGet = require('../lib/twitterGet')
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const request = require('request-promise')
 const waterfall = require('promise-waterfall')
 const fs = require('fs')
@@ -48,5 +49,5 @@ return mysqlQuery(`
   }
   throw error
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })

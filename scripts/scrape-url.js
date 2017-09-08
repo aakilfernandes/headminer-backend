@@ -1,4 +1,5 @@
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const request = require('request-promise')
 const parseHtml = require('../lib/parseHtml')
 const _ = require('lodash')
@@ -106,5 +107,5 @@ return mysqlQuery(`
     })
   })
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })

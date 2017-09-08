@@ -1,6 +1,7 @@
 const Jobbit = require('jobbit')
 const _ = require('lodash')
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const fs = require('../lib/fs')
 const getProcessingPriorities = require('../lib/getProcessingPriorities')
 const Promise = require('bluebird')

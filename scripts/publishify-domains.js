@@ -1,4 +1,5 @@
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const request = require('request-promise')
 const parseHtml = require('../lib/parseHtml')
 const colors = require('colors')
@@ -53,7 +54,7 @@ function getName(domain_pojo) {
           return answer
         })
       case 'x':
-        process.exit()
+        return mysqlDisconnect()
       default:
         return answer
     }

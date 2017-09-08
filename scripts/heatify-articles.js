@@ -1,4 +1,5 @@
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const getQs = require('../lib/getQs')
 
 const period_ms = 1000 * 60 * 60 * 4
@@ -49,5 +50,5 @@ return mysqlQuery(`
 
   return mysqlQuery(query, values)
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })

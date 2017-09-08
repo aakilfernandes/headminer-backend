@@ -1,5 +1,6 @@
 const getTwitterStatuses = require('../lib/getTwitterStatuses')
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const getQGroups = require('../lib/getQGroups')
 const getQs = require('../lib/getQs')
 const fs = require('fs')
@@ -99,5 +100,5 @@ mysqlQuery(`
   }
   throw error
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })

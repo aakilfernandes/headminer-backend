@@ -1,5 +1,6 @@
 const request = require('request-promise')
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const getRedditPosts = require('../lib/getRedditPosts')
 const getQGroups = require('../lib/getQGroups')
 const urljs = require('url')
@@ -66,5 +67,5 @@ return mysqlQuery(`
   })
 
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })

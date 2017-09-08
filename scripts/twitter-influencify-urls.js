@@ -1,4 +1,5 @@
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const _ = require('lodash')
 const getQs = require('../lib/getQs')
 const waterfall = require('promise-waterfall')
@@ -78,5 +79,5 @@ mysqlQuery(
 
   })
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })

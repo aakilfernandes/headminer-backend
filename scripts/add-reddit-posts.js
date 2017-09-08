@@ -1,5 +1,6 @@
 const request = require('request-promise')
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const getRedditPosts = require('../lib/getRedditPosts')
 const getQGroups = require('../lib/getQGroups')
 const urljs = require('url')
@@ -71,5 +72,5 @@ return mysqlQuery('SELECT id FROM reddit_posts ORDER BY created_at DESC limit 1'
     all_insert_values
   )
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })

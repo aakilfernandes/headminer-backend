@@ -1,4 +1,5 @@
 const mysqlQuery = require('../lib/mysqlQuery')
+const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const fs = require('../lib/fs')
 
 const period_query = 'created_at > NOW() - INTERVAL 48 HOUR'
@@ -158,7 +159,7 @@ mysqlQuery(`
     JSON.stringify(processing_priorities, null, 2)
   )
 }).finally(() => {
-  process.exit()
+  return mysqlDisconnect()
 })
 
 function getAverageAge(null_count, not_null_count, not_null_average) {
