@@ -58,7 +58,7 @@ function getNextJobbit() {
 function getNextScriptName() {
   return Promise.resolve().then(() => {
 
-    if (update_processing_priorities_started_at === null || Date.now() - update_processing_priorities_started_at > 60000) {
+    if (update_processing_priorities_started_at === null || Date.now() - update_processing_priorities_started_at > 600000) {
       update_processing_priorities_started_at = Date.now()
       return 'update-processing-priorities'
     }
