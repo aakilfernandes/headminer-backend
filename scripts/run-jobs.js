@@ -25,28 +25,25 @@ function runJobbitThread() {
 
 function getNextJobbit() {
   return getNextScriptName().then((script_name) => {
-    console.log(script_name)
-    return mysqlQuery('INSERT INTO jobs(created_at, name) VALUES(?, ?)', [
-      new Date(), script_name
-    ]).then((results) => {
+    return mysqlQuery('INSERT INTO jobs(name) VALUES(?)', [script_name]).then((results) => {
       const job_id = results.insertId
+      console.log('==== start ====')
+      console.log(script_name)
+      console.log(job_id)
       const command = getCommand(script_name)
       const jobbit = new Jobbit(command)
 
       return jobbit.promise.then((completion) => {
-        return mysqlQuery('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
-          new Date(),
+        console.log('===== end =====')
+        console.log(script_name)
+        console.log(job_id)
+        console.log(completion.time)
+        console.log(completion.error ? completion.error : 'no error')
+        return mysqlQuery('UPDATE jobs SET time = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
+          completion.time,
           completion.stdout || null,
           (completion.error || completion.stderr) ? true : false,
           completion.stderr || completion.error || null,
-          job_id
-        ])
-      }, (error) => {
-        return mysqlQuery('UPDATE jobs SET finished_at = ?, stdout = ?, is_failed = ?, error = ? WHERE id = ?', [
-          new Date(),
-          completion.stdout || null,
-          true,
-          error,
           job_id
         ])
       })

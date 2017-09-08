@@ -19,7 +19,7 @@ mysqlQuery(
       AND urls.twitter_statuses_count > 100
       AND urls.created_at > NOW() - INTERVAL 48 HOUR
     ORDER BY twitter_influencified_at ASC
-    LIMIT 100;
+    LIMIT 10;
   `).then((url_pojos) => {
 
     const url_ids = _.map(url_pojos, 'id')
@@ -40,7 +40,6 @@ mysqlQuery(
             ORDER BY RAND() LIMIT ?`,
             [url_pojo.id, user_sample_size]
           ).then((users) => {
-
             const user_ids = _.map(users, 'id')
             const select_user_ids_qs = getQs(user_ids.length)
             const queries = []
