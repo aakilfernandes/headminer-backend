@@ -8,7 +8,7 @@ const values = []
 
 mysqlQuery(`
   SELECT * FROM articles
-  WHERE created_at > NOW() - 48 HOURS
+  WHERE created_at > NOW() - 48 HOUR
   ORDER BY twitter_influencified_at ASC, id ASC
   LIMIT 10;
 `).then((articles) => {
