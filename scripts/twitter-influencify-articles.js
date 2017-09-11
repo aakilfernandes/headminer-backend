@@ -10,7 +10,7 @@ mysqlQuery(`
   SELECT * FROM articles
   WHERE created_at > NOW() - INTERVAL 48 HOUR
   ORDER BY twitter_influencified_at ASC, id ASC
-  LIMIT 10;
+  LIMIT 100;
 `).then((articles) => {
   const article_ids = _.map(articles, 'id')
   const article_ids_qs = getQs(article_ids.length)
