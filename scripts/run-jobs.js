@@ -11,7 +11,7 @@ const getApiAvailability = require('../lib/getApiAvailability')
 let update_processing_priorities_started_at = null
 let add_reddit_posts_started_at = null
 
-_.range(8).map(() => {
+_.range(4).map(() => {
   return runJobbitThread()
 })
 
