@@ -89,17 +89,25 @@ return mysqlQuery(`
       console.log(article_id)
       return mysqlQuery(`
         START TRANSACTION;
-        INSERT IGNORE INTO domains(domain) VALUE (?);
-        INSERT IGNORE INTO urls(domain_id, url) VALUE ((SELECT id FROM domains WHERE domains.domain = ?), ?);
+        INSERT IGNORE INTO domains(domain) VALUES (?);
+        INSERT IGNORE INTO urls(domain_id, url, article_id, scraped_at) VALUES (
+          (SELECT id FROM domains WHERE domains.domain = ?),
+          ?,
+          ?,
+          NOW()
+        );
         SET @canonical_url_id := (SELECT id FROM urls WHERE url = ? LIMIT 1);
         UPDATE urls
           SET canonical_url_id = @canonical_url_id,
           article_id = ?
           WHERE id = ?;
+        UPDATE urls
+          SET canonical_url_id = @canonical_url_id
+          WHERE id = @canonical_url_id;
         COMMIT;
       `, [
         canonical_url_domain,
-        canonical_url_domain, canonical_url,
+        canonical_url_domain, canonical_url, article_id,
         canonical_url,
         article_id,
         url_pojo.id
