@@ -20,11 +20,21 @@ mysqlQuery(`
     WHERE facebook_snapshot_added_at IS NOT NULL
       AND ${period_query};
 
-  SELECT count(id) as count FROM articles WHERE coallesced_at IS NULL AND ${period_query};
-  SELECT count(id) as count FROM articles WHERE coallesced_at IS NOT NULL AND ${period_query};
+  SELECT count(id) as count FROM articles
+    WHERE coallesced_at IS NULL
+      AND twitter_statuses_count IS NOT NULL
+      AND facebook_share_count IS NOT NULL
+      AND ${period_query};
+  SELECT count(id) as count FROM articles
+    WHERE coallesced_at IS NOT NULL
+      AND twitter_statuses_count IS NOT NULL
+      AND facebook_share_count IS NOT NULL
+      AND ${period_query};
   SELECT AVG(TIMESTAMPDIFF(SECOND, coallesced_at, NOW())) as average_age
     FROM articles
     WHERE coallesced_at IS NOT NULL
+      AND twitter_statuses_count IS NOT NULL
+      AND facebook_share_count IS NOT NULL
       AND ${period_query};
 
   SELECT count(urls.id) as count
