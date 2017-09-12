@@ -11,8 +11,8 @@ mysqlQuery((`
     SELECT articles.id FROM articles, urls
       WHERE urls.id = urls.canonical_url_id
         AND urls.article_id = articles.id
-        AND facebook_share_count IS NOT NULL
-        AND twitter_statuses_count IS NOT NULL
+        AND articles.facebook_share_count IS NOT NULL
+        AND articles.twitter_statuses_count IS NOT NULL
         AND articles.created_at > NOW() - INTERVAL 48 HOUR
       ORDER BY articles.coallesced_at ASC, articles.id ASC
       LIMIT 1
@@ -22,6 +22,9 @@ mysqlQuery((`
   COMMIT;
 `)).then((results) => {
   const articles = results[3]
+  if (articles.length === 0) {
+    return
+  }
   const article = articles[0]
   console.log(article.id)
   return mysqlQuery(`
