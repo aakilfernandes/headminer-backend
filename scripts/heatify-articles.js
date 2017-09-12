@@ -9,7 +9,9 @@ const period_ms = 1000 * 60 * 60 * 4
 
 return mysqlQuery(`
   SELECT * FROM articles
-  ORDER BY id DESC LIMIT 1;
+  WHERE twitter_statuses_count IS NOT NULL
+    AND facebook_share_count IS NOT NULL
+  ORDER BY heatified_at ASC, id ASC LIMIT 10000;
 
   SELECT AVG(reddit_score) FROM articles;
   SELECT AVG(twitter_statuses_count) FROM articles;
