@@ -59,20 +59,17 @@ mysqlQuery(`
   SELECT count(id) as count FROM articles
     WHERE twitter_statuses_count IS NOT NULL
       AND facebook_share_count IS NOT NULL
-      AND heatified_at IS NULL
-      AND ${period_query};
+      AND heatified_at IS NULL;
   SELECT count(id) as count FROM articles
     WHERE twitter_statuses_count IS NOT NULL
       AND facebook_share_count IS NOT NULL
       AND twitter_statuses_count IS NOT NULL
-      AND heatified_at IS NOT NULL
-      AND ${period_query};
+      AND heatified_at IS NOT NULL;
   SELECT AVG(TIMESTAMPDIFF(SECOND, heatified_at, NOW())) as average_age
     FROM articles
     WHERE heatified_at IS NOT NULL
       AND twitter_statuses_count IS NOT NULL
-      AND facebook_share_count IS NOT NULL
-      AND ${period_query};
+      AND facebook_share_count IS NOT NULL;
 
   SELECT count(id) as count FROM urls
     WHERE twitter_influencified_at IS NOT NULL

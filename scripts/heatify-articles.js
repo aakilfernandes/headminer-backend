@@ -2,13 +2,14 @@ const mysqlQuery = require('../lib/mysqlQuery')
 const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const getQs = require('../lib/getQs')
 
+const now = new Date
+const timezone_offset = now.getTimezoneOffset() * 60 * 1000
+const now_utc = now.getTime() + timezone_offset
 const period_ms = 1000 * 60 * 60 * 4
 
 return mysqlQuery(`
   SELECT * FROM articles
-  WHERE twitter_statuses_count IS NOT NULL
-    AND facebook_share_count IS NOT NULL
-  ORDER BY heatified_at ASC, id ASC LIMIT 10000;
+  ORDER BY id DESC LIMIT 1;
 
   SELECT AVG(reddit_score) FROM articles;
   SELECT AVG(twitter_statuses_count) FROM articles;
@@ -39,7 +40,8 @@ return mysqlQuery(`
       const logged_heat = Math.log10(1 + _heat)
       return sum + logged_heat
     }, 0)
-    const periods = (new Date() - article.created_at) / period_ms
+
+    const periods = (now_utc - new Date(article.created_at)) / period_ms
     const heat = untimed_heat / Math.max(1, periods)
 
     queries.push('UPDATE articles SET heat = ?, heatified_at = NOW() WHERE id = ?;')
