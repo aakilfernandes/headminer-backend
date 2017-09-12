@@ -11,6 +11,8 @@ mysqlQuery((`
     SELECT articles.id FROM articles, urls
       WHERE urls.id = urls.canonical_url_id
         AND urls.article_id = articles.id
+        AND facebook_share_count IS NOT NULL
+        AND twitter_statuses_count IS NOT NULL
         AND articles.created_at > NOW() - INTERVAL 48 HOUR
       ORDER BY articles.coallesced_at ASC, articles.id ASC
       LIMIT 1
