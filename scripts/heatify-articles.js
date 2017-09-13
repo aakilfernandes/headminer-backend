@@ -11,6 +11,7 @@ return mysqlQuery(`
   SELECT * FROM articles
   WHERE twitter_statuses_count IS NOT NULL
     AND facebook_share_count IS NOT NULL
+    AND created_at > NOW() - INTERVAL 72 HOUR
   ORDER BY heatified_at ASC, id ASC LIMIT 10000;
 
   SELECT AVG(reddit_score) FROM articles;
@@ -18,6 +19,9 @@ return mysqlQuery(`
   SELECT AVG(facebook_share_count) FROM articles;
 `).then((results) => {
   const articles = results[0]
+  if (articles.length === 0) {
+    return
+  }
   const average_reddit_score = results[1][0]['AVG(reddit_score)']
   const average_twitter_statuses_count = results[2][0]['AVG(twitter_statuses_count)']
   const average_facebook_share_count = results[3][0]['AVG(facebook_share_count)']
