@@ -11,7 +11,7 @@ const updateApiLimitedAt = require('../lib/updateApiLimitedAt')
 const fs = require('fs')
 const getSecret = require('../lib/getSecret')
 
-let proxies =
+let proxies
 let proxy_index = 0
 
 return getSecret('proxies').then((_proxies) => {
