@@ -11,6 +11,7 @@ const getApiAvailability = require('../lib/getApiAvailability')
 let update_processing_priorities_started_at = null
 let add_reddit_posts_started_at = null
 let delete_ignored_urls_started_at = null
+let heatify_articles_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -70,6 +71,11 @@ function getNextScriptName() {
     if (delete_ignored_urls_started_at === null || Date.now() - delete_ignored_urls_started_at > 60000) {
       delete_ignored_urls_started_at = Date.now()
       return 'delete-ignored-urls'
+    }
+
+    if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 60000) {
+      heatify_articles_started_at = Date.now()
+      return 'heatify-articles'
     }
 
     return getProcessingPriorities().then((priorities) => {
