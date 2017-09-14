@@ -41,7 +41,7 @@ server.get('/articles/:id', function (req, res, next) {
           AND twitter_influencers.is_ignored = 0
         ORDER BY twitter_articles_influences.adjusted_influence DESC
       `, [article.id]).then((influencers) => {
-        article.influencers = influencers
+        article.twitter_influencers = influencers
         res.send(article)
         next()
       })
@@ -66,6 +66,41 @@ server.get('/jobs/', function (req, res, next) {
   })
 })
 
+server.get('/twitter-influencers/:id', function (req, res, next) {
+  console.log(req.params.id)
+  mysqlQuery('SELECT * FROM twitter_influencers WHERE id = ?', [req.params.id]).then((influencers) => {
+    res.send(influencers[0])
+    next()
+  })
+})
+
+server.get('/twitter-influencers/:id/high-influence-articles', (req, res, next) => {
+  return mysqlQuery(`
+    SELECT articles.id FROM articles, twitter_articles_influences
+    WHERE articles.id = twitter_articles_influences.article_id
+      AND twitter_articles_influences.adjusted_influence > 1
+      AND twitter_articles_influences.influencer_id = ?
+    ORDER BY articles.heat DESC
+    LIMIT 10
+  `, [req.params.id]).then((articles) => {
+    res.send(_.map(articles, 'id'))
+    next()
+  })
+})
+
+server.get('/twitter-influencers/:id/low-influence-articles', (req, res, next) => {
+  return mysqlQuery(`
+    SELECT articles.id FROM articles, twitter_articles_influences
+    WHERE articles.id = twitter_articles_influences.article_id
+      AND twitter_articles_influences.adjusted_influence < -1
+      AND twitter_articles_influences.influencer_id = ?
+    ORDER BY articles.heat DESC
+    LIMIT 10
+  `, [req.params.id]).then((articles) => {
+    res.send(_.map(articles, 'id'))
+    next()
+  })
+})
 
 server.listen(4001, function () {
   console.log('%s listening at %s', server.name, server.url);
