@@ -9,6 +9,7 @@ const values = []
 mysqlQuery(`
   SELECT * FROM articles
   WHERE created_at > NOW() - INTERVAL 48 HOUR
+    AND is_twitter_coallescable = 1
   ORDER BY twitter_influencified_at ASC, id ASC
   LIMIT 100;
 `).then((articles) => {
