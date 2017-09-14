@@ -63,6 +63,7 @@ function fetchAndPush(url_pojo, queries, values) {
       UPDATE urls SET og_id = ?, facebook_share_count = ?, facebook_comment_count = ? WHERE id = ?;
       INSERT INTO facebook_snapshots(url_id, updated_time, share_count, comment_count)
         VALUES(?, ?, ?, ?);
+      UPDATE articles SET is_facebook_coallescable = 1 WHERE id = ?;
     `)
     const og_pojo = JSON.parse(body)
     const og_id = og_pojo.og_object ? og_pojo.og_object.id : null
@@ -75,7 +76,8 @@ function fetchAndPush(url_pojo, queries, values) {
       url_pojo.id,
       updated_time,
       og_pojo.share.share_count,
-      og_pojo.share.comment_count
+      og_pojo.share.comment_count,
+      url_pojo.article_id
     )
   }, (error) => {
     if (error && error.statusCode === 403) {

@@ -64,7 +64,10 @@ mysqlQuery(`
 
           const last_twitter_status_id = statuses.length > 0 ? statuses[0].id_str : url_pojo.last_twitter_status_id
 
-          const all_values = [new_twitter_statuses_count, last_twitter_status_id, url_pojo.id]
+          const all_values = [
+            new_twitter_statuses_count, last_twitter_status_id, url_pojo.id,
+            url_pojo.article_id
+          ]
             .concat(insert_users_values)
             .concat(insert_statuses_values)
             .concat(insert_statuses_urls_values)
@@ -81,6 +84,7 @@ mysqlQuery(`
 
           return mysqlQuery(`
             UPDATE urls SET twitter_statuses_count = ?, last_twitter_status_id = ? WHERE id = ?;
+            UPDATE articles SET is_twitter_coallescable = 1 WHERE id = ?;
             ${inserts_query}
             `,
             all_values
