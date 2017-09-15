@@ -87,15 +87,18 @@ mysqlQuery(`
   SELECT count(id) as count FROM articles
     WHERE twitter_influencified_at IS NULL
       AND is_twitter_coallescable = 1
+      AND twitter_statuses_count > 100
       AND ${period_query};
   SELECT count(id) as count FROM articles
     WHERE twitter_influencified_at IS NOT NULL
       AND is_twitter_coallescable = 1
+      AND twitter_statuses_count > 100
       AND ${period_query};
   SELECT AVG(TIMESTAMPDIFF(SECOND, twitter_influencified_at, NOW())) as average_age
     FROM articles
     WHERE twitter_influencified_at IS NOT NULL
       AND is_twitter_coallescable = 1
+      AND twitter_statuses_count > 100
       AND ${period_query};
 
   SELECT count(id) as count

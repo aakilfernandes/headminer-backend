@@ -41,9 +41,12 @@ server.get('/articles/:id', function (req, res, next) {
         return url.id === url.canonical_url_id
       })
 
-      return mysqlQuery('SELECT * FROM domains WHERE id = ?', [article.url.domain_id]).then((domains) => {
-        const domain = domains[0]
-        article.url.domain = domain
+      return mysqlQuery(`
+        SELECT * FROM domains WHERE id = ?;
+        SELECT publishers.* FROM publishers, domains WHERE domains.id = ? AND domains.publisher_id = publishers.id
+      `, [article.url.domain_id, article.url.domain_id]).then((results) => {
+        article.domain = results[0][0]
+        article.publisher = results[1][0]
         res.send(article)
         next()
       })
