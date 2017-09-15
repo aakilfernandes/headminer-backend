@@ -121,15 +121,6 @@ mysqlQuery((`
           console.log(facebook_comment_count)
 
           return mysqlQuery(`
-            INSERT INTO article_snapshots(
-                article_id,
-                reddit_posts_count,
-                twitter_statuses_count,
-                reddit_score,
-                facebook_share_count,
-                facebook_comment_count
-              )
-              VALUES(?, ?, ?, ?, ?, ?);
             UPDATE articles SET
               reddit_posts_count = ?,
               twitter_statuses_count = ?,
@@ -138,12 +129,6 @@ mysqlQuery((`
               facebook_comment_count = ?
               WHERE id = ?;
           `, [
-            article.id,
-            reddit_posts.length,
-            twitter_statuses_count,
-            reddit_score,
-            facebook_share_count,
-            facebook_comment_count,
             reddit_posts.length,
             twitter_statuses_count,
             reddit_score,
