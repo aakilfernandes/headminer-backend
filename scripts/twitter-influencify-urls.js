@@ -13,12 +13,13 @@ mysqlQuery(
     return
   }
   return mysqlQuery(`
-    SELECT urls.* FROM urls, domains
+    SELECT urls.* FROM urls, domains, articles
     WHERE urls.domain_id = domains.id
+      AND urls.artcile_id = articles.id
       AND domains.is_ignored = 0
       AND urls.twitter_statuses_count > 100
       AND urls.created_at > NOW() - INTERVAL 48 HOUR
-    ORDER BY twitter_influencified_at ASC
+    ORDER BY twitter_influencified_at ASC, articles.heat DESC
     LIMIT 10;
   `).then((url_pojos) => {
 
