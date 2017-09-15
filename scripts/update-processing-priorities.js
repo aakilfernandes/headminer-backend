@@ -71,7 +71,7 @@ mysqlQuery(`
       AND ${period_query};
 
   SELECT count(id) as count FROM urls
-    WHERE twitter_influencified_at IS NOT NULL
+    WHERE twitter_influencified_at IS NULL
       AND twitter_statuses_count > 100
       AND ${period_query};
   SELECT count(id) as count FROM urls
