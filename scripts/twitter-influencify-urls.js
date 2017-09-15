@@ -15,7 +15,7 @@ mysqlQuery(
   return mysqlQuery(`
     SELECT urls.* FROM urls, domains, articles
     WHERE urls.domain_id = domains.id
-      AND urls.artcile_id = articles.id
+      AND urls.article_id = articles.id
       AND domains.is_ignored = 0
       AND urls.twitter_statuses_count > 100
       AND urls.created_at > NOW() - INTERVAL 48 HOUR
