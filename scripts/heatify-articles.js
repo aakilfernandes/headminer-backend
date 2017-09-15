@@ -68,9 +68,7 @@ return mysqlQuery(`
         INSERT INTO article_snapshots(article_id, heat, reddit_posts_count, reddit_score, twitter_statuses_count, facebook_share_count, facebook_comment_count)
         SELECT id, heat, reddit_posts_count, reddit_score, twitter_statuses_count, facebook_share_count, facebook_comment_count
           FROM articles
-          WHERE created_at > NOW() - INTERVAL 48 HOUR
-          	AND coallesced_at IS NOT NULL
-            AND id IN (${article_ids_qs})
+          WHERE id IN (${article_ids_qs})
       `, article_ids)
     })
   })
