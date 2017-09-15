@@ -89,7 +89,7 @@ function getNextScriptName() {
   }).then((script_name) => {
     const config = scripts_config[script_name]
     if (config && config.api) {
-      return getApiAvailability(script_name).then((is_available) => {
+      return getApiAvailability(config.api).then((is_available) => {
         return is_available ? script_name : getNextScriptName()
       })
     }
