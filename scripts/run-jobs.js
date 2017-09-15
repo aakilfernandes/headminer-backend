@@ -7,13 +7,10 @@ const getProcessingPriorities = require('../lib/getProcessingPriorities')
 const Promise = require('bluebird')
 const getRandomWeightedChoice = require('random-weighted-choice')
 const getApiAvailability = require('../lib/getApiAvailability')
+const scripts_config = require('../lib/scripts_config')
+const delay = require('delay')
 
-let update_processing_priorities_started_at = null
-let add_reddit_posts_started_at = null
-let delete_ignored_urls_started_at = null
-let heatify_articles_started_at = null
-let add_article_snapshots_started_at = null
-let add_twitter_statuses_started_at = null
+let is_getting_next_jobbit = false
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -28,7 +25,12 @@ function runJobbitThread() {
 }
 
 function getNextJobbit() {
+  if (is_getting_next_jobbit) {
+    return Promise.resolve().then(delay(1000))
+  }
+  is_getting_next_jobbit = true
   return getNextScriptName().then((script_name) => {
+    scripts_config[script_name].started_at = Date.now()
     return mysqlQuery('INSERT INTO jobs(name) VALUES(?)', [script_name]).then((results) => {
       const job_id = results.insertId
       console.log('==== start ====')
@@ -36,6 +38,7 @@ function getNextJobbit() {
       console.log(job_id)
       const command = getCommand(script_name)
       const jobbit = new Jobbit(command)
+      is_getting_next_jobbit = false
 
       return jobbit.promise.then((completion) => {
         console.log('===== end =====')
@@ -57,69 +60,45 @@ function getNextJobbit() {
   })
 }
 
+let is_getting_next_script_name = false
+
 function getNextScriptName() {
   return Promise.resolve().then(() => {
 
-    if (update_processing_priorities_started_at === null || Date.now() - update_processing_priorities_started_at > 600000) {
-      update_processing_priorities_started_at = Date.now()
-      return 'update-processing-priorities'
-    }
+    let script_name
 
-    if (add_reddit_posts_started_at === null || Date.now() - add_reddit_posts_started_at > 60000) {
-      add_reddit_posts_started_at = Date.now()
-      return 'add-reddit-posts'
-    }
+    _.forEach(scripts_config, (config, _script_name) => {
+      if (!config.target_ms) { return }
+      if (config.started_at && (Date.now() - config.started_at < config.target_ms)) {
+        return
+      }
+      script_name = _script_name
+      return false
+    })
 
-    if (delete_ignored_urls_started_at === null || Date.now() - delete_ignored_urls_started_at > 60000) {
-      delete_ignored_urls_started_at = Date.now()
-      return 'delete-ignored-urls'
-    }
-
-    if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 60000) {
-      heatify_articles_started_at = Date.now()
-      return 'heatify-articles'
-    }
-
-    if (add_article_snapshots_started_at === null || Date.now() - add_article_snapshots_started_at > 3600000) {
-      add_article_snapshots_started_at = Date.now()
-      return 'add-article-snapshots'
+    if (script_name) {
+      return script_name
     }
 
     return getProcessingPriorities().then((priorities) => {
       const weightedChoices = _.map(priorities, (weight, id) => {
         return { weight, id}
       })
-      const script_name = getRandomWeightedChoice(weightedChoices)
-
-      if (script_name === 'add-twitter-statuses') {
-        if (add_twitter_statuses_started_at !== null & Date.now() - add_twitter_statuses_started_at < 10000) {
-          return getNextScriptName()
-        }
-        add_twitter_statuses_started_at = Date.now()
-      }
-
-      return checkApiAvailabilityOrGetNextScriptName(script_name)
+      return getRandomWeightedChoice(weightedChoices)
     })
-  })
-}
-
-function checkApiAvailabilityOrGetNextScriptName(script_name) {
-  return Promise.resolve().then(() => {
-    switch(script_name) {
-      case 'add-facebook-snapshots':
-        return getApiAvailability('facebook').then((is_available) => {
-          return is_available ? script_name : getNextScriptName()
-        })
-      case 'add-twitter-statuses':
-        return getApiAvailability('twitter-search').then((is_available) => {
-          return is_available ? script_name : getNextScriptName()
-        })
-      case 'add-twitter-friends':
-        return getApiAvailability('twitter-friend-ids').then((is_available) => {
-          return is_available ? script_name : getNextScriptName()
-        })
-      default:
-        return script_name
+  }).then((script_name) => {
+    const config = scripts_config[script_name]
+    if (config && config.api) {
+      return getApiAvailability(script_name).then((is_available) => {
+        return is_available ? script_name : getNextScriptName()
+      })
     }
+    return script_name
+  }).then((script_name) => {
+    const config = scripts_config[script_name] = scripts_config[script_name] || {}
+    if (config && config.wait_ms && Date.now() - config.started_at < config.wait_ms) {
+      return getNextScriptName()
+    }
+    return script_name
   })
 }
