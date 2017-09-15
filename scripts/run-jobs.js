@@ -13,6 +13,7 @@ let add_reddit_posts_started_at = null
 let delete_ignored_urls_started_at = null
 let heatify_articles_started_at = null
 let add_article_snapshots_started_at = null
+let add_twitter_statuses_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -89,6 +90,14 @@ function getNextScriptName() {
         return { weight, id}
       })
       const script_name = getRandomWeightedChoice(weightedChoices)
+
+      if (script_name === 'add-twitter-statuses') {
+        if (add_twitter_statuses_started_at !== null & Date.now() - add_twitter_statuses_started_at < 10000) {
+          return getNextScriptName()
+        }
+        add_twitter_statuses_started_at = Date.now()
+      }
+
       return checkApiAvailabilityOrGetNextScriptName(script_name)
     })
   })

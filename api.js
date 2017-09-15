@@ -71,6 +71,29 @@ server.get('/jobs/', function (req, res, next) {
   })
 })
 
+server.get('/publishers/:id', function (req, res, next) {
+  mysqlQuery(`
+    SELECT * FROM publishers WHERE id = ?;
+  `, [req.params.id]).then((publishers) => {
+    res.send(publishers[0])
+    next()
+  })
+})
+
+server.get('/publishers/:id/articles', function (req, res, next) {
+  mysqlQuery(`
+    SELECT articles.id FROM articles, domains, urls
+      WHERE domains.publisher_id = ?
+        AND urls.domain_id = domains.id
+        AND urls.article_id = articles.id
+      ORDER BY articles.heat DESC
+      LIMIT 10;
+  `, [req.params.id]).then((articles) => {
+    res.send(_.map(articles, 'id'))
+    next()
+  })
+})
+
 server.get('/twitter-influencers/:id', function (req, res, next) {
   console.log(req.params.id)
   mysqlQuery('SELECT * FROM twitter_influencers WHERE id = ?', [req.params.id]).then((influencers) => {
