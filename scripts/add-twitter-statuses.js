@@ -14,7 +14,7 @@ mysqlQuery(`
     AND urls.domain_id = domains.id
     AND domains.is_ignored = 0
   ORDER BY urls.twitter_statuses_added_at ASC, urls.id ASC
-  LIMIT 100;
+  LIMIT 10;
   `
 ).then((url_pojos) => {
 
