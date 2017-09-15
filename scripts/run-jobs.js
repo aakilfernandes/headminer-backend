@@ -12,6 +12,7 @@ let update_processing_priorities_started_at = null
 let add_reddit_posts_started_at = null
 let delete_ignored_urls_started_at = null
 let heatify_articles_started_at = null
+let add_article_snapshots_started_at = null
 
 _.range(4).map(() => {
   return runJobbitThread()
@@ -76,6 +77,11 @@ function getNextScriptName() {
     if (heatify_articles_started_at === null || Date.now() - heatify_articles_started_at > 60000) {
       heatify_articles_started_at = Date.now()
       return 'heatify-articles'
+    }
+
+    if (add_article_snapshots_started_at === null || Date.now() - add_article_snapshots_started_at > 3600000) {
+      add_article_snapshots_started_at = Date.now()
+      return 'add-article-snapshots'
     }
 
     return getProcessingPriorities().then((priorities) => {
