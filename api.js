@@ -19,18 +19,10 @@ server.use(function crossOrigin(req,res,next){
 server.get('/articles/:id', function (req, res, next) {
   mysqlQuery('SELECT * FROM articles WHERE id = ?', [req.params.id]).then((articles) => {
     const article = articles[0]
-    return mysqlQuery('SELECT * FROM urls WHERE article_id = ?', [article.id]).then((urls) => {
-      article.urls = urls
-      article.url = _.find(urls, (url) => {
-        return url.id === url.canonical_url_id
-      })
-      return mysqlQuery('SELECT * FROM domains WHERE id = ?', [article.url.domain_id]).then((domains) => {
-        const domain = domains[0]
-        article.url.domain = domain
-      })
-    }).then(() => {
-      return mysqlQuery(`
-        SELECT
+    return mysqlQuery(`
+      SELECT * FROM urls WHERE article_id = ?;
+      SELECT * FROM article_snapshots WHERE article_id = ? ORDER BY created_at ASC;
+      SELECT
           twitter_influencers.*,
           twitter_articles_influences.influence,
           twitter_articles_influences.adjusted_influence
@@ -39,9 +31,19 @@ server.get('/articles/:id', function (req, res, next) {
           twitter_articles_influences.article_id = ?
           AND twitter_influencers.id = twitter_articles_influences.influencer_id
           AND twitter_influencers.is_ignored = 0
-        ORDER BY twitter_articles_influences.adjusted_influence DESC
-      `, [article.id]).then((influencers) => {
-        article.twitter_influencers = influencers
+        ORDER BY twitter_articles_influences.adjusted_influence DESC;
+    `, [article.id, article.id, article.id]).then((results) => {
+      article.urls = results[0]
+      article.snapshots = results[1]
+      article.twitter_influencers = results[2]
+
+      article.url = _.find(article.urls, (url) => {
+        return url.id === url.canonical_url_id
+      })
+
+      return mysqlQuery('SELECT * FROM domains WHERE id = ?', [article.url.domain_id]).then((domains) => {
+        const domain = domains[0]
+        article.url.domain = domain
         res.send(article)
         next()
       })
