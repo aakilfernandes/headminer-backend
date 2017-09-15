@@ -12,7 +12,7 @@ return mysqlQuery(`
   SELECT * FROM articles
   WHERE twitter_statuses_count IS NOT NULL
     AND facebook_share_count IS NOT NULL
-    AND created_at > NOW() - INTERVAL 72 HOUR
+    AND created_at > NOW() - INTERVAL 48 HOUR
   ORDER BY heatified_at ASC, id ASC LIMIT 10000;
 
   SELECT AVG(reddit_score) FROM articles;
