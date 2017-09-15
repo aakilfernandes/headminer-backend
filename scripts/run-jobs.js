@@ -26,7 +26,7 @@ function runJobbitThread() {
 
 function getNextJobbit() {
   if (is_getting_next_jobbit) {
-    return Promise.resolve().then(delay(1000))
+    return Promise.resolve().then(delay(100))
   }
   is_getting_next_jobbit = true
   return getNextScriptName().then((script_name) => {
