@@ -122,6 +122,8 @@ mysqlQuery((`
 
           return mysqlQuery(`
             UPDATE articles SET
+              is_twitter_coallescable = 0,
+              is_facebook_coallescable = 0,
               reddit_posts_count = ?,
               twitter_statuses_count = ?,
               reddit_score = ?,
