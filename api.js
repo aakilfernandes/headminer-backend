@@ -1,11 +1,79 @@
 const restify = require('restify')
 const mysqlQuery = require('./lib/mysqlQuery')
 const _ = require('lodash')
+const getQs = require('./lib/getQs')
 
 const server = restify.createServer({
   name: 'headminer',
   version: '1.0.0'
 })
+
+function getArticles(_tables_query, _where_query, values) {
+  const tables_query = _tables_query ? `, ${_tables_query}` : ''
+  const where_query = _where_query ? `AND ${_where_query}` : ''
+  return mysqlQuery(`
+    SELECT
+        articles.*,
+        urls.url,
+        publishers.id AS publisher_id,
+        publishers.name AS publisher_name
+      FROM articles, urls, domains, publishers${tables_query}
+      WHERE articles.id = urls.article_id
+        AND urls.id = urls.canonical_url_id
+        AND urls.domain_id = domains.id
+        AND domains.publisher_id = publishers.id
+        ${where_query}
+      ORDER BY heat DESC
+      LIMIT 10;
+  `, values).then((_articles) => {
+
+    const articles = _.uniqBy(_articles, 'id')
+    // edge cases where 2 canonical urls ie bbc.com and bbc.co.uk
+
+    if (articles.length === 0) {
+      return articles
+    }
+
+    articles.forEach((article) => {
+      article.snapshots = []
+      article.twitter_influencers = []
+    })
+
+    const articles_by_id = _.keyBy(articles, 'id')
+
+    const article_ids = _.map(articles, 'id')
+    const article_ids_qs = getQs(article_ids.length)
+
+    return mysqlQuery(`
+      SELECT * FROM article_snapshots
+        WHERE article_id IN (${article_ids_qs})
+        ORDER BY created_at ASC;
+      SELECT
+          twitter_influencers.*, twitter_articles_influences.article_id,
+          twitter_articles_influences.influence,
+          twitter_articles_influences.adjusted_influence
+        FROM twitter_influencers, twitter_articles_influences
+        WHERE twitter_articles_influences.article_id IN (${article_ids_qs})
+          AND twitter_influencers.id = twitter_articles_influences.influencer_id
+          AND twitter_influencers.is_ignored = 0
+        ORDER BY twitter_articles_influences.adjusted_influence DESC;
+    `, article_ids.concat(article_ids)).then((results) => {
+      const snapshots = results[0]
+      const twitter_influencers = results[1]
+
+      snapshots.forEach((snapshot) => {
+        articles_by_id[snapshot.article_id].snapshots.push(snapshot)
+      })
+
+      twitter_influencers.forEach((twitter_influencer) => {
+        articles_by_id[twitter_influencer.article_id].twitter_influencers.push(twitter_influencer)
+      })
+
+      return articles
+    })
+
+  })
+}
 
 server.use(restify.plugins.acceptParser(server.acceptable))
 server.use(restify.plugins.queryParser())
@@ -16,50 +84,9 @@ server.use(function crossOrigin(req,res,next){
   return next()
 })
 
-server.get('/articles/:id', function (req, res, next) {
-  mysqlQuery('SELECT * FROM articles WHERE id = ?', [req.params.id]).then((articles) => {
-    const article = articles[0]
-    return mysqlQuery(`
-      SELECT * FROM urls WHERE article_id = ?;
-      SELECT * FROM article_snapshots WHERE article_id = ? ORDER BY created_at ASC;
-      SELECT
-          twitter_influencers.*,
-          twitter_articles_influences.influence,
-          twitter_articles_influences.adjusted_influence
-        FROM twitter_influencers, twitter_articles_influences
-        WHERE
-          twitter_articles_influences.article_id = ?
-          AND twitter_influencers.id = twitter_articles_influences.influencer_id
-          AND twitter_influencers.is_ignored = 0
-        ORDER BY twitter_articles_influences.adjusted_influence DESC;
-    `, [article.id, article.id, article.id]).then((results) => {
-      article.urls = results[0]
-      article.snapshots = results[1]
-      article.twitter_influencers = results[2]
-
-      article.url = _.find(article.urls, (url) => {
-        return url.id === url.canonical_url_id
-      })
-
-      return mysqlQuery(`
-        SELECT * FROM domains WHERE id = ?;
-        SELECT publishers.* FROM publishers, domains WHERE domains.id = ? AND domains.publisher_id = publishers.id
-      `, [article.url.domain_id, article.url.domain_id]).then((results) => {
-        article.domain = results[0][0]
-        article.publisher = results[1][0]
-        res.send(article)
-        next()
-      })
-    })
-  })
-})
-
 server.get('/hot/', function (req, res, next) {
-  mysqlQuery('SELECT id FROM articles ORDER BY heat DESC LIMIT 10', []).then((articles) => {
-    const ids = articles.map((article) => {
-      return article.id
-    })
-    res.send(ids)
+  getArticles().then((articles) => {
+    res.send(articles)
     next()
   })
 })
@@ -81,15 +108,8 @@ server.get('/publishers/:id', function (req, res, next) {
 })
 
 server.get('/publishers/:id/articles', function (req, res, next) {
-  mysqlQuery(`
-    SELECT articles.id FROM articles, domains, urls
-      WHERE domains.publisher_id = ?
-        AND urls.domain_id = domains.id
-        AND urls.article_id = articles.id
-      ORDER BY articles.heat DESC
-      LIMIT 10;
-  `, [req.params.id]).then((articles) => {
-    res.send(_.map(articles, 'id'))
+  getArticles(null, 'publishers.id = ?', [req.params.id]).then((articles) => {
+    res.send(articles)
     next()
   })
 })
@@ -103,29 +123,23 @@ server.get('/twitter-influencers/:id', function (req, res, next) {
 })
 
 server.get('/twitter-influencers/:id/high-influence-articles', (req, res, next) => {
-  return mysqlQuery(`
-    SELECT articles.id FROM articles, twitter_articles_influences
-    WHERE articles.id = twitter_articles_influences.article_id
-      AND twitter_articles_influences.adjusted_influence > 1
+  getArticles('twitter_articles_influences', `
+      articles.id = twitter_articles_influences.article_id
+      AND twitter_articles_influences.adjusted_influence >= 1
       AND twitter_articles_influences.influencer_id = ?
-    ORDER BY articles.heat DESC
-    LIMIT 10
   `, [req.params.id]).then((articles) => {
-    res.send(_.map(articles, 'id'))
+    res.send(articles)
     next()
   })
 })
 
 server.get('/twitter-influencers/:id/low-influence-articles', (req, res, next) => {
-  return mysqlQuery(`
-    SELECT articles.id FROM articles, twitter_articles_influences
-    WHERE articles.id = twitter_articles_influences.article_id
-      AND twitter_articles_influences.adjusted_influence < -1
+  getArticles('twitter_articles_influences', `
+      articles.id = twitter_articles_influences.article_id
+      AND twitter_articles_influences.adjusted_influence <= -1
       AND twitter_articles_influences.influencer_id = ?
-    ORDER BY articles.heat DESC
-    LIMIT 10
   `, [req.params.id]).then((articles) => {
-    res.send(_.map(articles, 'id'))
+    res.send(articles)
     next()
   })
 })
