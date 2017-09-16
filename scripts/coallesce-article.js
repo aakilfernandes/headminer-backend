@@ -17,7 +17,12 @@ mysqlQuery((`
       ORDER BY articles.coallesced_at ASC, articles.id ASC
       LIMIT 1
   );
-  UPDATE articles SET coallesced_at = NOW() WHERE id = @article_id;
+  UPDATE articles
+    SET
+      coallesced_at = NOW(),
+      is_twitter_coallescable = 0,
+      is_facebook_coallescable = 0
+    WHERE id = @article_id;
   SELECT * FROM articles WHERE id = @article_id;
   COMMIT;
 `)).then((results) => {
@@ -122,8 +127,6 @@ mysqlQuery((`
 
           return mysqlQuery(`
             UPDATE articles SET
-              is_twitter_coallescable = 0,
-              is_facebook_coallescable = 0,
               reddit_posts_count = ?,
               twitter_statuses_count = ?,
               reddit_score = ?,
