@@ -4,6 +4,10 @@ const _ = require('lodash')
 const getQs = require('./lib/getQs')
 const getArticles = require('./lib/getArticles')
 
+Date.prototype.toJSON = function toJSON(){
+   return this.getTime()
+}
+
 const server = restify.createServer({
   name: 'headminer',
   version: '1.0.0'

@@ -3,9 +3,6 @@ const mysqlDisconnect = require('../lib/mysqlDisconnect')
 const getQs = require('../lib/getQs')
 const _ = require('lodash')
 
-const now = new Date
-const timezone_offset = now.getTimezoneOffset() * 60 * 1000
-const now_utc = now.getTime() + timezone_offset
 const period_ms = 1000 * 60 * 60 * 4
 
 return mysqlQuery(`
@@ -54,7 +51,7 @@ return mysqlQuery(`
         return sum + logged_heat
       }, 0)
 
-      const periods = (now_utc - new Date(article.created_at)) / period_ms
+      const periods = (Date.now() - new Date(article.created_at)) / period_ms
       const heat = untimed_heat / Math.max(1, periods)
 
       queries.push('UPDATE articles SET heat = ? WHERE id = ?;')
