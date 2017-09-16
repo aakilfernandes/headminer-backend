@@ -17,7 +17,6 @@ return mysqlQuery(`
     SELECT urls.id FROM domains, urls
       WHERE domains.id = urls.domain_id
         AND domains.is_ignored = 0
-        AND urls.article_id IS NULL
         AND urls.created_at > NOW() - INTERVAL 48 HOUR
       ORDER BY scraped_at ASC
       LIMIT 1
@@ -56,6 +55,9 @@ return mysqlQuery(`
       if (url_pojo.domain_id === 429) {
         const jsdom = new JSDOM(response.body)
         special_title = jsdom.window.document.querySelector('.headline').textContent
+      } else if (url_pojo.domain_id === 2258) {
+        const jsdom = new JSDOM(response.body)
+        special_title = jsdom.window.document.querySelector('.blog-title').textContent
       }
 
       const title = special_title || parsed.meta['og:title'] || parsed.title
