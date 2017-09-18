@@ -21,12 +21,17 @@ return getSecret('proxies').then((_proxies) => {
     WHERE urls.domain_id = domains.id
       AND domains.is_ignored = 0
       AND urls.created_at > NOW() - INTERVAL 48 HOUR
-    ORDER BY facebook_snapshot_added_at ASC, id ASC LIMIT 100;
+    ORDER BY
+      facebook_snapshot_add_priority = 0,
+      facebook_snapshot_added_at ASC,
+      id ASC LIMIT 100;
   `).then((url_pojos) => {
     const url_ids = _.map(url_pojos, 'id')
     const url_ids_qs = getQs(url_ids.length)
     return mysqlQuery(`
-      UPDATE urls SET facebook_snapshot_added_at = NOW() WHERE id IN (${url_ids_qs})
+      UPDATE urls
+      SET facebook_snapshot_added_at = NOW(), facebook_snapshot_add_priority = 0
+      WHERE id IN (${url_ids_qs})
     `, url_ids).then(() => {
       const queries = []
       const values = []

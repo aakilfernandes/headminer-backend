@@ -10,7 +10,7 @@ return mysqlQuery(`
   WHERE twitter_statuses_count IS NOT NULL
     AND facebook_share_count IS NOT NULL
     AND created_at > NOW() - INTERVAL 48 HOUR
-  ORDER BY heatified_at ASC, id ASC LIMIT 10000;
+  ORDER BY heatify_priority DESC, heatified_at ASC, id ASC LIMIT 10000;
 
   SELECT AVG(reddit_score) FROM articles;
   SELECT AVG(twitter_statuses_count) FROM articles;
@@ -23,7 +23,7 @@ return mysqlQuery(`
   const article_ids = _.map(articles, 'id')
   const article_ids_qs = getQs(article_ids.length)
   return mysqlQuery(`
-    UPDATE articles SET heatified_at = NOW() WHERE id IN(${article_ids_qs})
+    UPDATE articles SET heatified_at = NOW(), heatify_priority = 0 WHERE id IN(${article_ids_qs})
   `, article_ids).then(() => {
 
     const average_reddit_score = results[1][0]['AVG(reddit_score)']

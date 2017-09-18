@@ -19,7 +19,7 @@ mysqlQuery(
       AND domains.is_ignored = 0
       AND urls.twitter_statuses_count > 100
       AND urls.created_at > NOW() - INTERVAL 48 HOUR
-    ORDER BY twitter_influencified_at ASC, articles.heat DESC
+    ORDER BY twitter_influencify_priority DESC, twitter_influencified_at ASC, articles.heat DESC
     LIMIT 10;
   `).then((url_pojos) => {
 
@@ -27,7 +27,9 @@ mysqlQuery(
     const url_ids_qs = getQs(url_ids.length)
 
     return mysqlQuery(`
-      UPDATE urls SET twitter_influencified_at = NOW() WHERE id IN (${url_ids_qs})
+      UPDATE urls
+      SET twitter_influencified_at = NOW(), twitter_influencify_priority = 0
+      WHERE id IN (${url_ids_qs})
     `, url_ids).then(() => {
       const influencifies = url_pojos.map((url_pojo) => {
         const multiplier = Math.max(1, url_pojo.twitter_statuses_count / user_sample_size)

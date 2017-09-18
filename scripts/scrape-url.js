@@ -18,10 +18,10 @@ return mysqlQuery(`
       WHERE domains.id = urls.domain_id
         AND domains.is_ignored = 0
         AND urls.created_at > NOW() - INTERVAL 48 HOUR
-      ORDER BY scraped_at ASC
+      ORDER BY scrape_priority DESC, scraped_at ASC
       LIMIT 1
   );
-  UPDATE urls SET scraped_at = NOW() WHERE id = @url_id;
+  UPDATE urls SET scraped_at = NOW(), scrape_priority = 0 WHERE id = @url_id;
   SELECT * FROM urls WHERE id = @url_id;
   COMMIT;
 `).then((results) => {

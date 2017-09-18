@@ -14,14 +14,15 @@ mysqlQuery((`
         AND articles.is_facebook_coallescable = 1
         AND articles.is_twitter_coallescable = 1
         AND articles.created_at > NOW() - INTERVAL 48 HOUR
-      ORDER BY articles.coallesced_at ASC, articles.id ASC
+      ORDER BY coallesce_priority DESC, articles.coallesced_at ASC, articles.id ASC
       LIMIT 1
   );
   UPDATE articles
     SET
       coallesced_at = NOW(),
       is_twitter_coallescable = 0,
-      is_facebook_coallescable = 0
+      is_facebook_coallescable = 0,
+      coallesce_priority = 0
     WHERE id = @article_id;
   SELECT * FROM articles WHERE id = @article_id;
   COMMIT;

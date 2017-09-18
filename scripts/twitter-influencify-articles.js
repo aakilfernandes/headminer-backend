@@ -10,13 +10,19 @@ mysqlQuery(`
   SELECT * FROM articles
   WHERE created_at > NOW() - INTERVAL 48 HOUR
     AND is_twitter_coallescable = 1
-  ORDER BY twitter_influencified_at ASC, heat DESC, created_at ASC
+  ORDER BY
+    twitter_influencify_priority DESC,
+    twitter_influencified_at ASC,
+    heat DESC,
+    created_at ASC
   LIMIT 100;
 `).then((articles) => {
   const article_ids = _.map(articles, 'id')
   const article_ids_qs = getQs(article_ids.length)
   return mysqlQuery(`
-    UPDATE articles SET twitter_influencified_at = NOW() WHERE id IN (${article_ids_qs});
+    UPDATE articles
+      SET twitter_influencified_at = NOW(), twitter_influencify_priority = 0
+      WHERE id IN (${article_ids_qs});
     SELECT twitter_urls_influences.*, article_id FROM twitter_urls_influences, urls
     WHERE twitter_urls_influences.url_id = urls.id
       AND urls.article_id IN (${article_ids_qs});
