@@ -42,14 +42,11 @@ _.map(endpoints, (endpoint, url) => {
     return fs.readFileAsync(cache_path, 'utf8').then((cached_json) => {
       const cached = JSON.parse(cached_json)
       if (Number.isNaN(endpoint.cache_ms)) {
-        console.log('return cached')
         return cached.value
       }
       if (Date.now() - cached.cached_at < endpoint.cache_ms) {
-        console.log('return cached 2')
         return cached.value
       }
-      console.log('return handleAndCache')
       return endpoint.handleAndCache(request.params, cache_path)
     }, () => {
       return endpoint.handleAndCache(request.params, cache_path)
