@@ -53,6 +53,11 @@ _.map(endpoints, (endpoint, url) => {
       return endpoint.handleAndCache(request.params, cache_path)
     }, () => {
       return endpoint.handleAndCache(request.params, cache_path)
+    }).then((value) => {
+      if (endpoint.postHandle) {
+        endpoint.postHandle(value)
+      }
+      return value
     })
   })
 })
