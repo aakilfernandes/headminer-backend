@@ -3,6 +3,11 @@ const mysqlQuery = require('./lib/mysqlQuery')
 const _ = require('lodash')
 const getQs = require('./lib/getQs')
 const getArticles = require('./lib/getArticles')
+const incrementArticlesPriorities = require('./lib/incrementArticlesPriorities')
+const Promise = require('bluebird')
+const restifyPromise = require('restify-await-promise')
+const endpoints = require('./lib/endpoints')
+const fs = require('./lib/fs')
 
 Date.prototype.toJSON = function toJSON(){
    return this.getTime()
@@ -11,6 +16,10 @@ Date.prototype.toJSON = function toJSON(){
 const server = restify.createServer({
   name: 'headminer',
   version: '1.0.0'
+})
+
+restifyPromise.install(server, {
+  logger: console
 })
 
 server.use(restify.plugins.acceptParser(server.acceptable))
@@ -22,65 +31,48 @@ server.use(function crossOrigin(req,res,next){
   return next()
 })
 
-server.get('/hot/:page_index', function (req, res, next) {
-  getArticles(req.params.page_index).then((articles) => {
-    res.send(articles)
-    next()
+_.map(endpoints, (endpoint, url) => {
+  server.get(url, (request, response) => {
+    if (endpoint.cache_ms === 0) {
+      return endpoint.handler(request.params)
+    }
+
+    const cache_path = getCachePath(request.url)
+
+    return fs.readFileAsync(cache_path, 'utf8').then((cached_json) => {
+      const cached = JSON.parse(cached_json)
+      if (Number.isNaN(endpoint.cache_ms)) {
+        console.log('return cached')
+        return cached.value
+      }
+      if (Date.now() - cached.cached_at < endpoint.cache_ms) {
+        console.log('return cached 2')
+        return cached.value
+      }
+      console.log('return handleAndCache')
+      return endpoint.handleAndCache(request.params, cache_path)
+    }, () => {
+      return endpoint.handleAndCache(request.params, cache_path)
+    })
   })
 })
 
-server.get('/jobs/', function (req, res, next) {
-  mysqlQuery('SELECT * FROM jobs ORDER BY id DESC LIMIT 1000', []).then((jobs) => {
-    res.send(jobs)
-    next()
-  })
-})
+function getCachePath(url) {
 
-server.get('/publishers/:id', function (req, res, next) {
-  mysqlQuery(`
-    SELECT * FROM publishers WHERE id = ?;
-  `, [req.params.id]).then((publishers) => {
-    res.send(publishers[0])
-    next()
-  })
-})
+  let cache_file = url
 
-server.get('/publishers/:id/articles/:page_index', function (req, res, next) {
-  getArticles(req.params.page_index, null, 'publishers.id = ?', [req.params.id]).then((articles) => {
-    res.send(articles)
-    next()
-  })
-})
+  if (cache_file.substr(0, 1) === '/') {
+    cache_file = cache_file.substr(1)
+  }
 
-server.get('/twitter-influencers/:id', function (req, res, next) {
-  console.log(req.params.id)
-  mysqlQuery('SELECT * FROM twitter_influencers WHERE id = ?', [req.params.id]).then((influencers) => {
-    res.send(influencers[0])
-    next()
-  })
-})
+  if (cache_file.substr(-1) === '/') {
+    cache_file = cache_file.substr(-1)
+  }
 
-server.get('/twitter-influencers/:id/high-influence-articles/:page_index', (req, res, next) => {
-  getArticles(req.params.page_index, 'twitter_articles_influences', `
-      articles.id = twitter_articles_influences.article_id
-      AND twitter_articles_influences.adjusted_influence >= 1
-      AND twitter_articles_influences.influencer_id = ?
-  `, [req.params.id]).then((articles) => {
-    res.send(articles)
-    next()
-  })
-})
+  cache_file = encodeURIComponent(cache_file)
 
-server.get('/twitter-influencers/:id/low-influence-articles/:page_index', (req, res, next) => {
-  getArticles(req.params.page_index, 'twitter_articles_influences', `
-      articles.id = twitter_articles_influences.article_id
-      AND twitter_articles_influences.adjusted_influence <= -1
-      AND twitter_articles_influences.influencer_id = ?
-  `, [req.params.id]).then((articles) => {
-    res.send(articles)
-    next()
-  })
-})
+  return `${__dirname}/cache/${cache_file}.json`
+}
 
 server.listen(4001, function () {
   console.log('%s listening at %s', server.name, server.url);
