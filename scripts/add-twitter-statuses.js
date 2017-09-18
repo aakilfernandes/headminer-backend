@@ -13,7 +13,7 @@ mysqlQuery(`
   WHERE urls.created_at >= NOW() - INTERVAL 2 DAY
     AND urls.domain_id = domains.id
     AND domains.is_ignored = 0
-  ORDER BY urls.twitter_statuses_added_at ASC, urls.id ASC
+  ORDER BY urls.twitter_statuses_add_priority, urls.twitter_statuses_added_at ASC, urls.id ASC
   LIMIT 10;
   `
 ).then((url_pojos) => {
@@ -22,7 +22,7 @@ mysqlQuery(`
   const url_ids_qs = getQs(url_ids.length)
 
   return mysqlQuery(`
-    UPDATE urls SET twitter_statuses_added_at = NOW() WHERE id IN (${url_ids_qs})
+    UPDATE urls SET twitter_statuses_added_at = NOW(), twitter_statuses_add_priority = 0 WHERE id IN (${url_ids_qs})
   `, url_ids).then(() => {
     const fetchAndUpdates = url_pojos.map((url_pojo) => {
       return function fetchAndUpdate() {
