@@ -168,7 +168,7 @@ mysqlQuery(`
 })
 
 function getAverageAge(null_count, not_null_count, not_null_average) {
-  return Math.round(1000 * (
+  return Math.max(Math.round(1000 * (
     (null_count * period_seconds) + (not_null_count * not_null_average)
-  ) / (null_count + not_null_count))
+  ) / (null_count + not_null_count)), 1)
 }
