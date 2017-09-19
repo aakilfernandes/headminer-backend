@@ -100,5 +100,10 @@ function getNextScriptName() {
       return getNextScriptName()
     }
     return script_name
+  }).then((script_name) => {
+    if (script_name === null) {
+      return delay(1000).then(getNextScriptName)
+    }
+    return script_name
   })
 }

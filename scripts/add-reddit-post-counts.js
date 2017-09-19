@@ -14,14 +14,14 @@ return mysqlQuery(`
       AND urls.domain_id = domains.id
       AND domains.is_ignored = 0
       AND reddit_posts.created_at > NOW() - INTERVAL 48 HOUR
-    ORDER BY snapshot_added_at ASC LIMIT 10;
+    ORDER BY counts_added_at ASC LIMIT 10;
 `).then((posts) => {
 
   const post_ids = _.map(posts, 'id')
   const post_ids_qs = getQs(post_ids.length)
 
   return mysqlQuery(`
-    UPDATE reddit_posts SET snapshot_added_at = NOW() WHERE id IN (${post_ids_qs})
+    UPDATE reddit_posts SET counts_added_at = NOW() WHERE id IN (${post_ids_qs})
   `, post_ids).then(() => {
 
     const bodies = []
@@ -50,12 +50,9 @@ return mysqlQuery(`
           UPDATE reddit_posts
             SET score = ?, comments_count = ?
             WHERE id = ?;
-          INSERT INTO reddit_post_snapshots(post_id, score, comments_count)
-            VALUES(?, ?, ?);
         `)
         values.push(
           score, comments_count, post.id,
-          post.id, score, comments_count
         )
       })
 

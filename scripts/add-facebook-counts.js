@@ -22,15 +22,15 @@ return getSecret('proxies').then((_proxies) => {
       AND domains.is_ignored = 0
       AND urls.created_at > NOW() - INTERVAL 48 HOUR
     ORDER BY
-      facebook_snapshot_add_priority = 0,
-      facebook_snapshot_added_at ASC,
+      facebook_counts_add_priority = 0,
+      facebook_counts_added_at ASC,
       id ASC LIMIT 100;
   `).then((url_pojos) => {
     const url_ids = _.map(url_pojos, 'id')
     const url_ids_qs = getQs(url_ids.length)
     return mysqlQuery(`
       UPDATE urls
-      SET facebook_snapshot_added_at = NOW(), facebook_snapshot_add_priority = 0
+      SET facebook_counts_added_at = NOW(), facebook_counts_add_priority = 0
       WHERE id IN (${url_ids_qs})
     `, url_ids).then(() => {
       const queries = []
@@ -66,8 +66,6 @@ function fetchAndPush(url_pojo, queries, values) {
   return proxyRequest(`http://graph.facebook.com/?id=${url_pojo.url}`).then((body) => {
     queries.push(`
       UPDATE urls SET og_id = ?, facebook_share_count = ?, facebook_comment_count = ? WHERE id = ?;
-      INSERT INTO facebook_snapshots(url_id, updated_time, share_count, comment_count)
-        VALUES(?, ?, ?, ?);
       UPDATE articles SET is_facebook_coallescable = 1 WHERE id = ?;
     `)
     const og_pojo = JSON.parse(body)
@@ -78,10 +76,6 @@ function fetchAndPush(url_pojo, queries, values) {
       og_pojo.share.share_count,
       og_pojo.share.comment_count,
       url_pojo.id,
-      url_pojo.id,
-      updated_time,
-      og_pojo.share.share_count,
-      og_pojo.share.comment_count,
       url_pojo.article_id
     )
   }, (error) => {

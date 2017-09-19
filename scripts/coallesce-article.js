@@ -83,23 +83,6 @@ mysqlQuery((`
         'SELECT * FROM urls WHERE article_id = ?', [article.id]
       ).then((url_pojos) => {
 
-        let is_ready = true
-
-        _.forEach(url_pojos, (url_pojo) => {
-          if (
-            !url_pojo.twitter_statuses_added_at
-            || !url_pojo.facebook_snapshot_added_at
-          ) {
-            is_ready = false
-            return false
-          }
-        })
-
-        if (!is_ready) {
-          return
-        }
-
-
         const url_ids = _.map(url_pojos, (url) => {
           return url.id
         })

@@ -22,7 +22,10 @@ return mysqlQuery(`
       LIMIT 1
   );
   UPDATE urls SET scraped_at = NOW(), scrape_priority = 0 WHERE id = @url_id;
-  SELECT * FROM urls WHERE id = @url_id;
+  SELECT urls.*, domains.publisher_id AS publisher_id
+    FROM urls, domains
+    WHERE urls.id = @url_id
+      AND urls.domain_id = domains.id;
   COMMIT;
 `).then((results) => {
   const url_pojos = results[3]
@@ -73,12 +76,16 @@ return mysqlQuery(`
 
       if (url_pojo.article_id === null) {
         article_insert = mysqlQuery(`
-          INSERT INTO articles(title, author, description, image) VALUES (?, ?, ?, ?);
+          INSERT INTO articles(title, author, description, image, url, publisher_id)
+            VALUES (?, ?, ?, ?, ?, ?);
         `, [
           title,
           author,
           description,
-          image
+          image,
+          canonical_url,
+          url_pojo.publisher_id,
+          url_pojo.publisher_name
         ])
       } else {
         article_insert = mysqlQuery(`

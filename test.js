@@ -1,5 +1,9 @@
-const mysqlQuery = require('./lib/mysqlQuery')
+const endpoints = require('./lib/endpoints')
+const mysqlDisconnect = require('./lib/mysqlDisconnect')
 
-mysqlQuery('SELECT * FROM urls ORDER BY id DESC LIMIT 1').then((urls) => {
-  console.log(new Date(urls[0].created_at).getTime())
+const started_at = Date.now()
+
+endpoints.articles.handleAndCache({ page_index: 0 }).then(() => {
+  console.log(Date.now() - started_at)
+  return mysqlDisconnect()
 })

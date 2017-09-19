@@ -32,12 +32,12 @@ server.use(function crossOrigin(req,res,next){
 })
 
 _.map(endpoints, (endpoint, url) => {
-  server.get(url, (request, response) => {
+  server.get(endpoint.pattern, (request, response) => {
     if (endpoint.cache_ms === 0) {
       return endpoint.handler(request.params)
     }
 
-    const cache_path = getCachePath(request.url)
+    const cache_path = endpoint.getCachePath(request.params)
 
     return fs.readFileAsync(cache_path, 'utf8').then((cached_json) => {
       const cached = JSON.parse(cached_json)
@@ -47,9 +47,9 @@ _.map(endpoints, (endpoint, url) => {
       if (Date.now() - cached.cached_at < endpoint.cache_ms) {
         return cached.value
       }
-      return endpoint.handleAndCache(request.params, cache_path)
+      return endpoint.handleAndCache(request.params)
     }, () => {
-      return endpoint.handleAndCache(request.params, cache_path)
+      return endpoint.handleAndCache(request.params)
     }).then((value) => {
       if (endpoint.postHandle) {
         endpoint.postHandle(value)
@@ -58,23 +58,6 @@ _.map(endpoints, (endpoint, url) => {
     })
   })
 })
-
-function getCachePath(url) {
-
-  let cache_file = url
-
-  if (cache_file.substr(0, 1) === '/') {
-    cache_file = cache_file.substr(1)
-  }
-
-  if (cache_file.substr(-1) === '/') {
-    cache_file = cache_file.substr(-1)
-  }
-
-  cache_file = encodeURIComponent(cache_file)
-
-  return `${__dirname}/cache/${cache_file}.json`
-}
 
 server.listen(4001, function () {
   console.log('%s listening at %s', server.name, server.url);

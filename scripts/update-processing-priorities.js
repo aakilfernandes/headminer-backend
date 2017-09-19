@@ -13,11 +13,11 @@ mysqlQuery(`
     WHERE twitter_statuses_added_at IS NOT NULL
       AND ${period_query};
 
-  SELECT count(id) as count FROM urls WHERE facebook_snapshot_added_at IS NULL AND ${period_query};
-  SELECT count(id) as count FROM urls WHERE facebook_snapshot_added_at IS NOT NULL AND ${period_query};
-  SELECT AVG(TIMESTAMPDIFF(SECOND, facebook_snapshot_added_at, NOW())) as average_age
+  SELECT count(id) as count FROM urls WHERE facebook_counts_added_at IS NULL AND ${period_query};
+  SELECT count(id) as count FROM urls WHERE facebook_counts_added_at IS NOT NULL AND ${period_query};
+  SELECT AVG(TIMESTAMPDIFF(SECOND, facebook_counts_added_at, NOW())) as average_age
     FROM urls
-    WHERE facebook_snapshot_added_at IS NOT NULL
+    WHERE facebook_counts_added_at IS NOT NULL
       AND ${period_query};
 
   SELECT count(id) as count FROM articles
@@ -123,7 +123,7 @@ mysqlQuery(`
       results[1][0].count,
       results[2][0].average_age
     ),
-    'add-facebook-snapshots': getAverageAge(
+    'add-facebook-counts': getAverageAge(
       results[3][0].count,
       results[4][0].count,
       results[5][0].average_age
