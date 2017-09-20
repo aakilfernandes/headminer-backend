@@ -116,6 +116,13 @@ mysqlQuery(`
     WHERE friends_added_at IS NOT NULL
       AND friends_count <= 200
       AND ${period_query};
+
+  SELECT count(id) as count
+    FROM urls
+    WHERE ${period_query};
+  SELECT AVG(TIMESTAMPDIFF(SECOND, reddit_counts_added_at, NOW())) as average_age
+    FROM urls
+    WHERE ${period_query};
 `).then((results) => {
   const processing_priorities = {
     'add-twitter-statuses': getAverageAge(
@@ -157,7 +164,12 @@ mysqlQuery(`
       results[21][0].count,
       results[22][0].count,
       results[23][0].average_age
-    )
+    ),
+    'add-reddit-counts': getAverageAge(
+      0,
+      results[24][0].count,
+      results[25][0].average_age
+    ),
   }
   return fs.writeFileAsync(
     `${__dirname}/../workspace/processing_priorities.json`,

@@ -52,7 +52,10 @@ _.map(endpoints, (endpoint, url) => {
       return endpoint.handleAndCache(request.params)
     }).then((value) => {
       if (endpoint.postHandle) {
-        endpoint.postHandle(value)
+        console.log('endpoint.postHandle')
+        return endpoint.postHandle(value).then(() => {
+          return value
+        })
       }
       return value
     })
