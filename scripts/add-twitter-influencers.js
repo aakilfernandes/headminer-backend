@@ -29,7 +29,6 @@ return mysqlQuery(`
 
     return function get_and_insert() {
       return twitterGet('users/show', { user_id: friendship.friend_id }).then((user) => {
-        console.log('user', user)
         return mysqlQuery(`
           INSERT IGNORE INTO twitter_influencers
           (id, name, screen_name, description, followers_count, profile_image_url, users_count)
