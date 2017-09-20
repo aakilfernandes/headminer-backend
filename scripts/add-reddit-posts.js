@@ -33,7 +33,7 @@ return mysqlQuery(`
 
     const insert_domains_q_groups = getQGroups(posts.length, 2)
     const insert_subreddits_q_groups = getQGroups(nonignored_posts.length, 3)
-    const insert_urls_q_groups = getQGroups(nonignored_posts.length, 2, ', (SELECT id FROM domains WHERE domain = ? LIMIT 1)')
+    const insert_urls_q_groups = getQGroups(nonignored_posts.length, 1, ', (SELECT id FROM domains WHERE domain = ? LIMIT 1)')
     const insert_posts_q_groups = getQGroups(nonignored_posts.length, 5, ', (SELECT id FROM urls WHERE url = ? LIMIT 1)')
     const insert_domains_values = []
     const insert_subreddits_values = []
@@ -52,9 +52,9 @@ return mysqlQuery(`
         post.subreddit,
         1
       )
+      console.log(post.url)
       insert_urls_values.push(
         post.url,
-        1,
         post.domain
       )
       insert_posts_values.push(
@@ -78,7 +78,7 @@ return mysqlQuery(`
     return mysqlQuery(`
       INSERT IGNORE INTO domains(domain, reddit_posts_count) VALUES ${insert_domains_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
       INSERT IGNORE INTO reddit_subreddits(id, name, reddit_posts_count) VALUES ${insert_subreddits_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
-      INSERT IGNORE INTO urls(url, reddit_posts_count, domain_id) VALUES ${insert_urls_q_groups} ON DUPLICATE KEY UPDATE reddit_posts_count = reddit_posts_count + 1;
+      INSERT IGNORE INTO urls(url, domain_id) VALUES ${insert_urls_q_groups};
       INSERT IGNORE INTO reddit_posts(id, created_at, subreddit_id, score, comments_count, url_id) VALUES ${insert_posts_q_groups};
       `,
       all_insert_values

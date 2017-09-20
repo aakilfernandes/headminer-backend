@@ -76,14 +76,13 @@ return mysqlQuery(`
 
       if (url_pojo.article_id === null) {
         article_insert = mysqlQuery(`
-          INSERT INTO articles(title, author, description, image, url, publisher_id)
-            VALUES (?, ?, ?, ?, ?, ?);
+          INSERT INTO articles(title, author, description, image, publisher_id)
+            VALUES (?, ?, ?, ?, ?);
         `, [
           title,
           author,
           description,
           image,
-          canonical_url,
           url_pojo.publisher_id,
           url_pojo.publisher_name
         ])
