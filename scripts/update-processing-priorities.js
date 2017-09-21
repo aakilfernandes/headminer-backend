@@ -24,17 +24,20 @@ mysqlQuery(`
     WHERE coallesced_at IS NULL
       AND is_facebook_coallescable = 1
       AND is_twitter_coallescable = 1
+      AND is_reddit_coallescable = 1
       AND ${period_query};
   SELECT count(id) as count FROM articles
     WHERE coallesced_at IS NOT NULL
       AND is_facebook_coallescable = 1
       AND is_twitter_coallescable = 1
+      AND is_reddit_coallescable = 1
       AND ${period_query};
   SELECT AVG(TIMESTAMPDIFF(SECOND, coallesced_at, NOW())) as average_age
     FROM articles
     WHERE coallesced_at IS NOT NULL
       AND is_facebook_coallescable = 1
       AND is_twitter_coallescable = 1
+      AND is_reddit_coallescable = 1
       AND ${period_query};
 
   SELECT count(urls.id) as count

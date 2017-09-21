@@ -37,6 +37,7 @@ return mysqlQuery(`
             UPDATE reddit_posts
               SET score = ?, comments_count = ?
               WHERE id = ?;
+
           `)
           values.push(
             score, comments_count, post.id
@@ -44,6 +45,13 @@ return mysqlQuery(`
         })
       }
     })
+
+    const article_ids = _.uniq(_.map(url_pojos, 'article_id'))
+    const article_ids_qs = getQs(article_ids.length)
+    queries.push(`
+      UPDATE articles SET is_reddit_coallescable = 1 WHERE id IN (${article_ids_qs});
+    `)
+    values.push(...article_ids)
 
     return waterfall(fetches).then(() => {
       return mysqlQuery(queries.join('\r\n'), values)
