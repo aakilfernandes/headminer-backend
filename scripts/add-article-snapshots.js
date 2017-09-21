@@ -7,6 +7,6 @@ mysqlQuery(`
     FROM articles
     WHERE created_at > NOW() - INTERVAL 48 HOUR
     	AND heatified_at IS NOT NULL
-`).then(() => {
+`).finally(() => {
   return mysqlDisconnect()
 })
