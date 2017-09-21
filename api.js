@@ -34,7 +34,7 @@ server.use(function crossOrigin(req,res,next){
 _.map(endpoints, (endpoint, url) => {
   server.get(endpoint.pattern, (request, response) => {
     if (endpoint.cache_ms === 0) {
-      return endpoint.handler(request.params)
+      return endpoint.handle(request.params)
     }
 
     const cache_path = endpoint.getCachePath(request.params)

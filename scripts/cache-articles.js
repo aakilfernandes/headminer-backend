@@ -16,4 +16,6 @@ const cacheArticles = _.range(10).map((page_index) => {
   }
 })
 
-waterfall(cacheArticles).finally(mysqlDisconnect)
+waterfall(cacheArticles).finally(() => {
+  return mysqlDisconnect()
+})
